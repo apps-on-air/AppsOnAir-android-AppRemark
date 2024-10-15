@@ -40,13 +40,18 @@ class MainActivity2 : ComponentActivity() {
                                 contentColor = Color.Black
                             ),
                             onClick = {
+                                //with extra payload
                                 AppRemarkService.addRemark(
                                     this@MainActivity2,
+                                    //pass your customized payload, which you want to save in order to monitor your app
                                     extraPayload = mapOf(
                                         "title" to "Initial Demo",
                                         "isFromIndia" to true
                                     )
                                 )
+
+                                //without extra payload
+                                //AppRemarkService.addRemark(this@MainActivity2)
                             },
                         ) {
                             Text(

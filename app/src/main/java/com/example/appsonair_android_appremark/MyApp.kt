@@ -17,9 +17,18 @@ class MyApp : Application() {
             }
 
             override fun onActivityResumed(activity: Activity) {
+                //params to apply custom theme for remark screen
+                val options = mutableMapOf("pageBackgroundColor" to "#FFFFC5")
+
+                //with default theme
+                //AppRemarkService.initialize(activity)
+
+                //with customize theme
+                //shakeGestureEnable is set to true by default, allowing the device to capture your current screen when it shakes. If it is false, the device shake's auto-capture screen will be disabled.
                 AppRemarkService.initialize(
                     activity,
-                    options = mutableMapOf("pageBackgroundColor" to "#FFFFC5")
+                    shakeGestureEnable = true,
+                    options = options
                 )
             }
 

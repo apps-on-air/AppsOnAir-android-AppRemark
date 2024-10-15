@@ -2,12 +2,13 @@
     <string name="app_name">App name</string>
 
     <string name="add_remark">Add Remark</string>
+    <string name="improvement_suggestion">Improvement suggestion</string>
+    <string name="bug_report">Bug report</string>
     <string name="description">Description</string>
     <string name="add_description_here">Add description here…</string>
     <string name="remark_type">Remark Type</string>
     <string name="run_on_apps_on_air">We run on AppsOnAir</string>
     <string name="submit">Submit</string>
-
     <string name="description_required">Description required!</string>
 
     <string name="label_brush">Brush</string>
@@ -26,18 +27,17 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="discard">Discard</string>
-    <string name="open_setting">Open setting</string>
-    <string name="continue_str">Continue</string>
     <string name="select_picture">Select Picture</string>
-    <string name="save_image_alert_msg">To save this image, please allow required permission from setting.</string>
     <string name="error_something_wrong">ERROR : Something went wrong, please verify meta-data in your project\'s manifest!\nFor more info : https://documentation.appsonair.com/Mobile-Quickstart/android-sdk-setup</string>
     <string name="add_image">Add Image</string>
     <string name="close_screen">Close Screen</string>
     <string name="image">Image</string>
     <string name="remove_image">Remove Image</string>
+    <string name="remark_added_successfully">Remark added successfully!</string>
+    <string name="portrait">Portrait</string>
+    <string name="landscape">Landscape</string>
 
     <string-array name="photo_editor_emoji">
-
         <!-- Smiles -->
         <item>u+1f604</item>
         <item>u+1f603</item>

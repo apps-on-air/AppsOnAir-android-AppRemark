@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import com.example.appsonair_android_appremark.ui.theme.AppsOnAirAndroidAppRemarkTheme
 
 class MainActivity : ComponentActivity() {
-    private val TAG = "MainActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

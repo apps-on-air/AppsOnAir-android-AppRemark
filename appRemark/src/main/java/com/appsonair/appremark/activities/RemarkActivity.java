@@ -76,6 +76,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -201,23 +202,25 @@ public class RemarkActivity extends AppCompatActivity {
         activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                 Uri selectedImage = result.getData().getData();
-                String fileName = getFileName(selectedImage);
-                String fileType = getFileType(selectedImage);
-                ImageData imageData = new ImageData.Builder()
-                        .setImageUri(selectedImage)
-                        .setFileName(fileName)
-                        .setFileType(fileType)
-                        .build();
-                imageList.add(imageData);
-                if (imageList.size() > 1) {
-                    imgAdd.setVisibility(View.GONE);
+                if (selectedImage != null) {
+                    String fileName = getFileName(selectedImage);
+                    String fileType = getFileType(selectedImage);
+                    ImageData imageData = new ImageData.Builder()
+                            .setImageUri(selectedImage)
+                            .setFileName(fileName)
+                            .setFileType(fileType)
+                            .build();
+                    imageList.add(imageData);
+                    if (imageList.size() > 1) {
+                        imgAdd.setVisibility(View.GONE);
+                    }
+                    imageAdapter.notifyItemInserted(imageList.size() - 1);
                 }
-                imageAdapter.notifyItemInserted(imageList.size() - 1);
             }
         });
 
         btnSubmit.setOnClickListener(view -> {
-            String description = etDescription.getText().toString().trim();
+            String description = Objects.requireNonNullElse(etDescription.getText(), "").toString().trim();
             if (description.isEmpty()) {
                 etDescription.setError(getResources().getString(R.string.description_required));
             } else {
@@ -246,6 +249,7 @@ public class RemarkActivity extends AppCompatActivity {
     }
 
     private int getMaxLength() {
+        //noinspection DataFlowIssue
         return (int) companion.getOptions().get("descriptionMaxLength");
     }
 
@@ -290,15 +294,15 @@ public class RemarkActivity extends AppCompatActivity {
 
             int orientation = getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                screenOrientation = "Portrait";
+                screenOrientation = getString(R.string.portrait);
             } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                screenOrientation = "Landscape";
+                screenOrientation = getString(R.string.landscape);
             }
 
             String usedStorage = getReadableStorageSize(getTotalStorageSize(this, false));
             String totalStorage = getReadableStorageSize(getTotalStorageSize(this, true));
             String totalMemory = getReadableStorageSize(getAvailableMemory().totalMem);
-            String availableMemory = getReadableStorageSize(getAvailableMemory().availMem);
+            //String availableMemory = getReadableStorageSize(getAvailableMemory().availMem);
 
             ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
             List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
@@ -315,14 +319,14 @@ public class RemarkActivity extends AppCompatActivity {
             }
 
             String libVersionName = BuildConfig.VERSION_NAME;
-            String libVersionCode = BuildConfig.VERSION_CODE;
+            // String libVersionCode = BuildConfig.VERSION_CODE;
 
             ConnectivityManager connectivityManager =
                     (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             String networkState = "";
             if (connectivityManager != null) {
                 NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-                networkState = activeNetworkInfo.getTypeName();
+                networkState = Objects.requireNonNull(activeNetworkInfo).getTypeName();
             }
 
             deviceInfo = new DeviceInfo.Builder()
@@ -414,6 +418,9 @@ public class RemarkActivity extends AppCompatActivity {
         return Color.parseColor(color);
     }
 
+    /**
+     * @noinspection deprecation
+     */
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -421,7 +428,7 @@ public class RemarkActivity extends AppCompatActivity {
 
     private String getFileName(Uri uri) {
         String result = null;
-        if (uri.getScheme().equals("content")) {
+        if (Objects.equals(uri.getScheme(), "content")) {
             Cursor cursor = getContentResolver().query(uri, null, null, null, null);
             //noinspection TryFinallyCanBeTryWithResources
             try {
@@ -438,7 +445,7 @@ public class RemarkActivity extends AppCompatActivity {
 
         if (result == null) {
             result = uri.getPath();
-            int cut = result.lastIndexOf('/');
+            int cut = Objects.requireNonNull(result).lastIndexOf('/');
             if (cut != -1) {
                 result = result.substring(cut + 1);
             }
@@ -448,7 +455,7 @@ public class RemarkActivity extends AppCompatActivity {
 
     private String getFileType(Uri uri) {
         String mimeType;
-        if (uri.getScheme().equals("content")) {
+        if (Objects.equals(uri.getScheme(), "content")) {
             mimeType = getContentResolver().getType(uri);
         } else {
             String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
@@ -553,6 +560,7 @@ public class RemarkActivity extends AppCompatActivity {
                     public void onResponse(@NonNull Call call, @NonNull Response response) {
                         try {
                             if (response.code() == 200) {
+
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -579,6 +587,7 @@ public class RemarkActivity extends AppCompatActivity {
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 
+            //noinspection ExtractMethodRecommender
             JSONObject dataObject = new JSONObject();
 
             JSONObject metaDataObject = new JSONObject(companion.getExtraPayload());
@@ -605,6 +614,7 @@ public class RemarkActivity extends AppCompatActivity {
             mapData.put("timestamp", deviceInfo.getTimestamp());
             mapData.put("appsOnAirSDKVersion", deviceInfo.getAppsOnAirSDKVersion());
             mapData.put("networkState", deviceInfo.getNetworkState());
+            mapData.put("bundleIdentifier", deviceInfo.getBundleIdentifier());
             JSONObject deviceObject = new JSONObject(mapData);
             dataObject.put("deviceInfo", deviceObject);
 
@@ -633,12 +643,14 @@ public class RemarkActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.GONE);
                 try {
                     if (response.code() == 200) {
-                        Toast.makeText(RemarkActivity.this, "Remark added successfully!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(RemarkActivity.this, R.string.remark_added_successfully, Toast.LENGTH_LONG).show();
                     } else {
-                        String myResponse = response.body().string();
-                        JSONObject jsonObject = new JSONObject(myResponse);
-                        String message = jsonObject.getString("message");
-                        Toast.makeText(RemarkActivity.this, message, Toast.LENGTH_LONG).show();
+                        if (response.body() != null) {
+                            String myResponse = response.body().string();
+                            JSONObject jsonObject = new JSONObject(myResponse);
+                            String message = jsonObject.getString("message");
+                            Toast.makeText(RemarkActivity.this, message, Toast.LENGTH_LONG).show();
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
