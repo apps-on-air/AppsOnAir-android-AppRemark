@@ -29,6 +29,7 @@
     <string name="discard">Discard</string>
     <string name="select_picture">Select Picture</string>
     <string name="error_something_wrong">ERROR : Something went wrong, please verify meta-data in your project\'s manifest!\nFor more info : https://documentation.appsonair.com/Mobile-Quickstart/android-sdk-setup</string>
+    <string name="something_wrong">Something went wrong, please try later!</string>
     <string name="add_image">Add Image</string>
     <string name="close_screen">Close Screen</string>
     <string name="image">Image</string>

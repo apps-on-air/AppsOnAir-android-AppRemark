@@ -31,7 +31,7 @@
 
         <meta-data
             android:name="appId"
-            android:value="********-****-****-****-************" />
+            android:value="bb98cd03-28fd-4578-85d0-3f8cc995d67d" />
     </application>
 
 </manifest>

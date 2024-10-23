@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.usage.StorageStatsManager;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,6 +20,7 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.MediaStore;
@@ -54,20 +54,24 @@ import com.appsonair.appremark.adapters.ImageAdapter;
 import com.appsonair.appremark.interfaces.OnItemClickListener;
 import com.appsonair.appremark.models.DeviceInfo;
 import com.appsonair.appremark.models.ImageData;
+import com.appsonair.appremark.models.RemarkFileInfo;
 import com.appsonair.appremark.services.AppRemarkService;
+import com.appsonair.appremark.utils.ApiUtils;
+import com.appsonair.appremark.utils.RemarkTypeMapper;
 import com.appsonair.core.services.CoreService;
 import com.appsonair.core.services.NetworkService;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.gson.Gson;
 import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -81,6 +85,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -92,8 +97,9 @@ public class RemarkActivity extends AppCompatActivity {
     private static final String TAG = "RemarkActivity";
     private static final int PICK_IMAGE = 100;
     private final List<ImageData> imageList = new ArrayList<>();
+    private final List<RemarkFileInfo> remarkFileInfoList = new ArrayList<>();
     AppRemarkService.Companion companion = AppRemarkService.Companion;
-    String remarkType;
+    String remarkType, description, appId;
     DeviceInfo deviceInfo;
     ProgressBar progressBar;
     private ImageAdapter imageAdapter;
@@ -115,6 +121,8 @@ public class RemarkActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_remark);
         NetworkService.checkConnectivity(this, isAvailable -> hasNetwork = isAvailable);
+
+        deviceInfo = new DeviceInfo.Builder().build();
 
         //init views
         LinearLayout linearLayout = findViewById(R.id.ll_main);
@@ -180,6 +188,7 @@ public class RemarkActivity extends AppCompatActivity {
             Uri imagePath = intent.getParcelableExtra("IMAGE_PATH");
             if (imagePath != null) {
                 String fileName = getFileName(imagePath);
+
                 String fileType = getFileType(imagePath);
                 ImageData imageData = new ImageData.Builder()
                         .setImageUri(imagePath)
@@ -220,27 +229,31 @@ public class RemarkActivity extends AppCompatActivity {
         });
 
         btnSubmit.setOnClickListener(view -> {
-            String description = Objects.requireNonNullElse(etDescription.getText(), "").toString().trim();
+            description = Objects.requireNonNullElse(etDescription.getText(), "").toString().trim();
             if (description.isEmpty()) {
                 etDescription.setError(getResources().getString(R.string.description_required));
             } else {
                 hideKeyboard();
                 etDescription.setError(null);
                 if (hasNetwork) {
-                    String appId = CoreService.getAppId(this);
+                    appId = CoreService.getAppId(this);
                     if (appId.isEmpty()) {
                         Log.d(TAG, "AppId: " + getString(R.string.error_something_wrong));
                     } else {
                         Log.d(TAG, "AppId: " + appId);
                         progressBar.setVisibility(View.VISIBLE);
-                        submitRemark(appId, description);
+                        if (!imageList.isEmpty()) {
+                            getUploadImageURL();
+                        } else {
+                            submitRemark(appId, description);
+                        }
                     }
                 } else {
+                    Toast.makeText(this, "Please check your internet connection!", Toast.LENGTH_SHORT).show();
                     Log.d(TAG, "Please check your internet connection!");
                 }
             }
         });
-
         getDeviceInfo();
     }
 
@@ -309,9 +322,9 @@ public class RemarkActivity extends AppCompatActivity {
             String appMemoryUsage = "";
             for (ActivityManager.RunningAppProcessInfo processInfo : runningAppProcesses) {
                 if (processInfo.processName.equals(packageName)) {
-                    android.os.Debug.MemoryInfo[] memoryInfoArray =
+                    Debug.MemoryInfo[] memoryInfoArray =
                             activityManager.getProcessMemoryInfo(new int[]{processInfo.pid});
-                    android.os.Debug.MemoryInfo memoryInfo = memoryInfoArray[0];
+                    Debug.MemoryInfo memoryInfo = memoryInfoArray[0];
                     int totalPss = memoryInfo.getTotalPss();
                     appMemoryUsage = getReadableStorageSize((long) totalPss * 1024);
                     break;
@@ -328,11 +341,10 @@ public class RemarkActivity extends AppCompatActivity {
                 NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
                 networkState = Objects.requireNonNull(activeNetworkInfo).getTypeName();
             }
-
             deviceInfo = new DeviceInfo.Builder()
                     .setDeviceModel(Build.BRAND + " " + Build.MODEL)
                     .setDeviceOsVersion(Build.VERSION.RELEASE)
-                    .setDeviceBatteryLevel(String.valueOf(batteryLevel))
+                    .setDeviceBatteryLevel(batteryLevel + "%")
                     .setDeviceScreenSize(screenWidth + "x" + screenHeight + " px")
                     .setDeviceOrientation(screenOrientation)
                     .setDeviceRegionCode(locale.getCountry())
@@ -465,26 +477,28 @@ public class RemarkActivity extends AppCompatActivity {
     }
 
     public void getUploadImageURL() {
+        final String signedApiURL = BuildConfig.BASE_URL + ApiUtils.getSignedUrl;
         for (int i = 0; i < imageList.size(); i++) {
             ImageData imageData = imageList.get(i);
             final MediaType JSON = MediaType.get("application/json; charset=utf-8");
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
 
-            JSONObject jsonObject = new JSONObject();
+            JSONObject dataObject = new JSONObject();
+            JSONObject fileObject = new JSONObject();
             try {
-                jsonObject.put("fileName", imageData.getFileName());
-                jsonObject.put("fileType", imageData.getFileType());
+                fileObject.put("fileName", imageData.getFileName());
+                fileObject.put("fileType", imageData.getFileType());
+                dataObject.put("data", fileObject);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-
-            RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
+            RequestBody body = RequestBody.create(dataObject.toString(), JSON);
             Request request = new Request.Builder()
-                    .url(BuildConfig.BASE_URL)
+                    .url(signedApiURL)
                     .method("POST", body)
                     .build();
-            client.newCall(request).enqueue(new okhttp3.Callback() {
+            client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
@@ -494,7 +508,14 @@ public class RemarkActivity extends AppCompatActivity {
                 public void onResponse(@NonNull Call call, @NonNull Response response) {
                     try {
                         if (response.code() == 200) {
-                            imageUpload("", imageData);
+                            String responseBody = response.body() != null ? response.body().string() : "";
+                            if (!responseBody.isEmpty()) {
+                                JSONObject jsonObject = new JSONObject(responseBody);
+                                JSONObject dataObject = jsonObject.getJSONObject("data");
+                                String fileUrl = dataObject.getString("fileUrl");
+                                String signedURL = dataObject.getString("signedURL");
+                                uploadImage(signedURL, fileUrl, imageData);
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -505,79 +526,49 @@ public class RemarkActivity extends AppCompatActivity {
         }
     }
 
-    public byte[] getBytesFromUri(ContentResolver contentResolver, Uri uri) throws IOException {
-        InputStream inputStream = null;
-        ByteArrayOutputStream byteArrayOutputStream = null;
-        try {
-            inputStream = contentResolver.openInputStream(uri);
-            if (inputStream == null) {
-                return null;
-            }
-            byteArrayOutputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
-            int len;
-            while ((len = inputStream.read(buffer)) != -1) {
-                byteArrayOutputStream.write(buffer, 0, len);
-            }
-            return byteArrayOutputStream.toByteArray();
-        } finally {
-            if (inputStream != null) {
-                inputStream.close();
-            }
-            if (byteArrayOutputStream != null) {
-                byteArrayOutputStream.close();
-            }
-        }
-    }
-
-    public void imageUpload(String url, ImageData imageData) {
-        final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+    public void uploadImage(String signedURL, String fileUrl, ImageData imageData) {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
 
-        JSONObject jsonObject = new JSONObject();
-        try {
-            jsonObject.put("imageUrl", url);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        File imageFile = new File(imageData.getImageUri().getPath());
 
-        try {
-            byte[] imageBytes = getBytesFromUri(getContentResolver(), imageData.getImageUri());
-            if (imageBytes != null) {
-                RequestBody body = RequestBody.create(imageBytes, JSON);
-                Request request = new Request.Builder()
-                        .url(BuildConfig.BASE_URL)
-                        .method("POST", body)
-                        .build();
-                client.newCall(request).enqueue(new okhttp3.Callback() {
-                    @Override
-                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                        Log.d("Failure : ", String.valueOf(e));
-                    }
+        RequestBody body = RequestBody.create(imageFile,
+                MediaType.parse(imageData.getFileType()));
 
-                    @Override
-                    public void onResponse(@NonNull Call call, @NonNull Response response) {
-                        try {
-                            if (response.code() == 200) {
+        Request request = new Request.Builder()
+                .url(signedURL)
+                .addHeader("Content-Type", imageData.getFileType())
+                .method("PUT", body)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.d("Failure : ", String.valueOf(e));
+            }
 
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Log.d("Failure : ", String.valueOf(e.getMessage()));
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) {
+                try {
+                    if (response.code() == 200) {
+                        RemarkFileInfo remarkFileInfo = new RemarkFileInfo.Builder()
+                                .setKey(fileUrl)
+                                .setFileType(imageData.getFileType())
+                                .build();
+                        remarkFileInfoList.add(remarkFileInfo);
+                        if (imageList.size() == remarkFileInfoList.size()) {
+                            submitRemark(appId, description);
                         }
                     }
-                });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Log.d("Failure : ", String.valueOf(e.getMessage()));
+                }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        });
     }
 
     public void submitRemark(String appId, String description) {
-        if (!imageList.isEmpty()) {
-            getUploadImageURL();
-        }
+        final String remarkApiURL = BuildConfig.BASE_URL + ApiUtils.createRemark;
         final MediaType JSON = MediaType.get("application/json; charset=utf-8");
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
@@ -587,13 +578,12 @@ public class RemarkActivity extends AppCompatActivity {
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 
-            //noinspection ExtractMethodRecommender
             JSONObject dataObject = new JSONObject();
 
             JSONObject metaDataObject = new JSONObject(companion.getExtraPayload());
             dataObject.put("additionalMetadata", metaDataObject);
             dataObject.put("description", description);
-            dataObject.put("type", remarkType);
+            dataObject.put("type", RemarkTypeMapper.getType(remarkType));
 
             Map<String, Object> mapData = new HashMap<>();
 
@@ -606,7 +596,7 @@ public class RemarkActivity extends AppCompatActivity {
             mapData.put("buildVersionNumber", deviceInfo.getBuildVersionNumber());
             mapData.put("deviceOsVersion", deviceInfo.getDeviceOsVersion());
             mapData.put("deviceRegionCode", deviceInfo.getDeviceRegionCode());
-            mapData.put("deviceBatteryLevel", deviceInfo.getDeviceBatteryLevel());
+            mapData.put("deviceBatteryLevel", batteryLevel + "%");
             mapData.put("deviceScreenSize", deviceInfo.getDeviceScreenSize());
             mapData.put("deviceRegionName", deviceInfo.getDeviceRegionName());
             mapData.put("appName", deviceInfo.getAppName());
@@ -618,45 +608,67 @@ public class RemarkActivity extends AppCompatActivity {
             JSONObject deviceObject = new JSONObject(mapData);
             dataObject.put("deviceInfo", deviceObject);
 
-            dataObject.put("attachments", appId);
+            if (!remarkFileInfoList.isEmpty()) {
+                Gson gson = new Gson();
+                String remarkFileList = gson.toJson(remarkFileInfoList);
+                JSONArray remarkFileListJsonArray = new JSONArray(remarkFileList);
+                dataObject.put("attachments", remarkFileListJsonArray);
+            }
 
             jsonObject.put("where", whereObject);
             jsonObject.put("data", dataObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
         RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
         Request request = new Request.Builder()
-                .url(BuildConfig.BASE_URL)
+                .url(remarkApiURL)
                 .method("POST", body)
                 .build();
-        client.newCall(request).enqueue(new okhttp3.Callback() {
+        client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d("Failure : ", String.valueOf(e));
-                progressBar.setVisibility(View.GONE);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
-                progressBar.setVisibility(View.GONE);
-                try {
-                    if (response.code() == 200) {
-                        Toast.makeText(RemarkActivity.this, R.string.remark_added_successfully, Toast.LENGTH_LONG).show();
-                    } else {
-                        if (response.body() != null) {
-                            String myResponse = response.body().string();
-                            JSONObject jsonObject = new JSONObject(myResponse);
-                            String message = jsonObject.getString("message");
-                            Toast.makeText(RemarkActivity.this, message, Toast.LENGTH_LONG).show();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setVisibility(View.GONE);
+                        try {
+                            if (response.code() == 200) {
+                                String responseBody = response.body() != null ? response.body().string() : "";
+                                String message = "";
+                                if (!responseBody.isEmpty()) {
+                                    JSONObject bodyObject = new JSONObject(responseBody);
+                                    message = bodyObject.getString("message");
+                                }
+                                String successMessage = message.isEmpty() ? getString(R.string.remark_added_successfully) : message;
+                                Toast.makeText(RemarkActivity.this, successMessage, Toast.LENGTH_LONG).show();
+                            } else {
+                                Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Log.d("Failure : ", String.valueOf(e.getMessage()));
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d("Failure : ", String.valueOf(e.getMessage()));
-                }
+                });
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(batteryInfoReceiver);
     }
 }

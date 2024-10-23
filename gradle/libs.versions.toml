@@ -6,6 +6,7 @@ constraintlayout = "2.1.4"
 fragmentKtx = "1.8.3"
 gradle = "7.0.4"
 gradleNexusStagingPlugin = "0.22.0"
+gson = "2.10.1"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -28,6 +29,7 @@ compiler = { module = "com.github.bumptech.glide:compiler", version = "4.16.0" }
 glide = { module = "com.github.bumptech.glide:glide", version = "4.16.0" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 gradle-nexus-staging-plugin = { module = "io.codearte.gradle.nexus:gradle-nexus-staging-plugin", version.ref = "gradleNexusStagingPlugin" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
