@@ -1,8 +1,14 @@
 package com.appsonair.appremark.activities;
 
+import static com.appsonair.appremark.utils.AppUtils.getAvailableMemory;
+import static com.appsonair.appremark.utils.AppUtils.getReadableStorageSize;
+import static com.appsonair.appremark.utils.AppUtils.getTotalStorageSize;
+import static com.appsonair.appremark.utils.FileUtils.getFileFromUri;
+import static com.appsonair.appremark.utils.FileUtils.getFileName;
+import static com.appsonair.appremark.utils.FileUtils.getFileType;
+
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.usage.StorageStatsManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +18,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -21,10 +26,7 @@ import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Debug;
-import android.os.Environment;
-import android.os.storage.StorageManager;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.text.InputFilter;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -33,7 +35,6 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -72,7 +73,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,7 +82,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
-import java.util.UUID;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -187,9 +186,9 @@ public class RemarkActivity extends AppCompatActivity {
         if (intent != null && intent.hasExtra("IMAGE_PATH")) {
             Uri imagePath = intent.getParcelableExtra("IMAGE_PATH");
             if (imagePath != null) {
-                String fileName = getFileName(imagePath);
+                String fileName = getFileName(this, imagePath);
 
-                String fileType = getFileType(imagePath);
+                String fileType = getFileType(this, imagePath);
                 ImageData imageData = new ImageData.Builder()
                         .setImageUri(imagePath)
                         .setFileName(fileName)
@@ -212,8 +211,8 @@ public class RemarkActivity extends AppCompatActivity {
             if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                 Uri selectedImage = result.getData().getData();
                 if (selectedImage != null) {
-                    String fileName = getFileName(selectedImage);
-                    String fileType = getFileType(selectedImage);
+                    String fileName = getFileName(this, selectedImage);
+                    String fileType = getFileType(this, selectedImage);
                     ImageData imageData = new ImageData.Builder()
                             .setImageUri(selectedImage)
                             .setFileName(fileName)
@@ -236,21 +235,22 @@ public class RemarkActivity extends AppCompatActivity {
                 hideKeyboard();
                 etDescription.setError(null);
                 if (hasNetwork) {
-                    appId = CoreService.getAppId(this);
-                    if (appId.isEmpty()) {
-                        Log.d(TAG, "AppId: " + getString(R.string.error_something_wrong));
-                    } else {
-                        Log.d(TAG, "AppId: " + appId);
-                        progressBar.setVisibility(View.VISIBLE);
-                        if (!imageList.isEmpty()) {
-                            getUploadImageURL();
+                    if (progressBar.getVisibility() == View.GONE) {
+                        appId = CoreService.getAppId(this);
+                        if (appId.isEmpty()) {
+                            Log.d(TAG, "AppId: " + getString(R.string.error_something_wrong));
                         } else {
-                            submitRemark(appId, description);
+                            Log.d(TAG, "AppId: " + appId);
+                            progressBar.setVisibility(View.VISIBLE);
+                            if (!imageList.isEmpty()) {
+                                getUploadImageURL();
+                            } else {
+                                submitRemark(appId, description);
+                            }
                         }
                     }
                 } else {
                     Toast.makeText(this, "Please check your internet connection!", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Please check your internet connection!");
                 }
             }
         });
@@ -314,7 +314,7 @@ public class RemarkActivity extends AppCompatActivity {
 
             String usedStorage = getReadableStorageSize(getTotalStorageSize(this, false));
             String totalStorage = getReadableStorageSize(getTotalStorageSize(this, true));
-            String totalMemory = getReadableStorageSize(getAvailableMemory().totalMem);
+            String totalMemory = getReadableStorageSize(getAvailableMemory(this).totalMem);
             //String availableMemory = getReadableStorageSize(getAvailableMemory().availMem);
 
             ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
@@ -366,38 +366,6 @@ public class RemarkActivity extends AppCompatActivity {
         }
     }
 
-    private ActivityManager.MemoryInfo getAvailableMemory() {
-        ActivityManager activityManager = (ActivityManager) this.getSystemService(ACTIVITY_SERVICE);
-        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
-        activityManager.getMemoryInfo(memoryInfo);
-        return memoryInfo;
-    }
-
-    public String getReadableStorageSize(long size) {
-        if (size <= 0) return "0";
-        String[] units = {"B", "KB", "MB", "GB", "TB"};
-        int digitGroups = (int) (Math.log10(size) / Math.log10(1024));
-        return new DecimalFormat("#,##0.#").format(size / Math.pow(1024, digitGroups)) + " " + units[digitGroups];
-    }
-
-    public long getTotalStorageSize(Context context, boolean getTotalStorage) {
-        StorageManager storageManager = (StorageManager) context.getSystemService(Context.STORAGE_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                StorageStatsManager storageStatsManager = (StorageStatsManager) context.getSystemService(Context.STORAGE_STATS_SERVICE);
-                UUID uuid = storageManager.getUuidForPath(Environment.getDataDirectory());
-                long totalBytes = storageStatsManager.getTotalBytes(uuid);
-                long freeBytes = storageStatsManager.getFreeBytes(uuid);
-                long usedBytes = totalBytes - freeBytes;
-                return getTotalStorage ? totalBytes : usedBytes;
-            } catch (IOException e) {
-                return 0L;
-            }
-        } else {
-            return 0L;
-        }
-    }
-
     private void openGallery() {
         hideKeyboard();
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
@@ -430,52 +398,6 @@ public class RemarkActivity extends AppCompatActivity {
         return Color.parseColor(color);
     }
 
-    /**
-     * @noinspection deprecation
-     */
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-    }
-
-    private String getFileName(Uri uri) {
-        String result = null;
-        if (Objects.equals(uri.getScheme(), "content")) {
-            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-            //noinspection TryFinallyCanBeTryWithResources
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    result = cursor.getString(nameIndex);
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
-            }
-        }
-
-        if (result == null) {
-            result = uri.getPath();
-            int cut = Objects.requireNonNull(result).lastIndexOf('/');
-            if (cut != -1) {
-                result = result.substring(cut + 1);
-            }
-        }
-        return result;
-    }
-
-    private String getFileType(Uri uri) {
-        String mimeType;
-        if (Objects.equals(uri.getScheme(), "content")) {
-            mimeType = getContentResolver().getType(uri);
-        } else {
-            String fileExtension = MimeTypeMap.getFileExtensionFromUrl(uri.toString());
-            mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExtension.toLowerCase());
-        }
-        return mimeType;
-    }
-
     public void getUploadImageURL() {
         final String signedApiURL = BuildConfig.BASE_URL + ApiUtils.getSignedUrl;
         for (int i = 0; i < imageList.size(); i++) {
@@ -502,6 +424,7 @@ public class RemarkActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
+                    hideProgressbar();
                 }
 
                 @Override
@@ -520,6 +443,7 @@ public class RemarkActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
+                        hideProgressbar();
                     }
                 }
             });
@@ -530,41 +454,47 @@ public class RemarkActivity extends AppCompatActivity {
         OkHttpClient client = new OkHttpClient().newBuilder()
                 .build();
 
-        File imageFile = new File(imageData.getImageUri().getPath());
+        File imageFile = getFileFromUri(this, imageData.getImageUri());
+        if (imageFile.exists()) {
+            RequestBody body = RequestBody.create(imageFile,
+                    MediaType.parse(imageData.getFileType()));
 
-        RequestBody body = RequestBody.create(imageFile,
-                MediaType.parse(imageData.getFileType()));
-
-        Request request = new Request.Builder()
-                .url(signedURL)
-                .addHeader("Content-Type", imageData.getFileType())
-                .method("PUT", body)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.d("Failure : ", String.valueOf(e));
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) {
-                try {
-                    if (response.code() == 200) {
-                        RemarkFileInfo remarkFileInfo = new RemarkFileInfo.Builder()
-                                .setKey(fileUrl)
-                                .setFileType(imageData.getFileType())
-                                .build();
-                        remarkFileInfoList.add(remarkFileInfo);
-                        if (imageList.size() == remarkFileInfoList.size()) {
-                            submitRemark(appId, description);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.d("Failure : ", String.valueOf(e.getMessage()));
+            Request request = new Request.Builder()
+                    .url(signedURL)
+                    .addHeader("Content-Type", imageData.getFileType())
+                    .addHeader("x-amz-acl", "public-read")
+                    .method("PUT", body)
+                    .build();
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    Log.d("Failure : ", String.valueOf(e));
+                    hideProgressbar();
                 }
-            }
-        });
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    try {
+                        if (response.code() == 200) {
+                            RemarkFileInfo remarkFileInfo = new RemarkFileInfo.Builder()
+                                    .setKey(fileUrl)
+                                    .setFileType(imageData.getFileType())
+                                    .build();
+                            remarkFileInfoList.add(remarkFileInfo);
+                            if (imageList.size() == remarkFileInfoList.size()) {
+                                submitRemark(appId, description);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.d("Failure : ", String.valueOf(e.getMessage()));
+                        hideProgressbar();
+                    }
+                }
+            });
+        } else {
+            hideProgressbar();
+        }
     }
 
     public void submitRemark(String appId, String description) {
@@ -629,41 +559,47 @@ public class RemarkActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d("Failure : ", String.valueOf(e));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                });
+                runOnUiThread(() -> progressBar.setVisibility(View.GONE));
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressBar.setVisibility(View.GONE);
-                        try {
-                            if (response.code() == 200) {
-                                String responseBody = response.body() != null ? response.body().string() : "";
-                                String message = "";
-                                if (!responseBody.isEmpty()) {
-                                    JSONObject bodyObject = new JSONObject(responseBody);
-                                    message = bodyObject.getString("message");
-                                }
-                                String successMessage = message.isEmpty() ? getString(R.string.remark_added_successfully) : message;
-                                Toast.makeText(RemarkActivity.this, successMessage, Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+                runOnUiThread(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    try {
+                        if (response.code() == 200) {
+                            String responseBody = response.body() != null ? response.body().string() : "";
+                            String message = "";
+                            if (!responseBody.isEmpty()) {
+                                JSONObject bodyObject = new JSONObject(responseBody);
+                                message = bodyObject.getString("message");
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            Log.d("Failure : ", String.valueOf(e.getMessage()));
+                            String successMessage = message.isEmpty() ? getString(R.string.remark_added_successfully) : message;
+                            Toast.makeText(RemarkActivity.this, successMessage, Toast.LENGTH_LONG).show();
+                            finish();
+                        } else {
+                            Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Log.d("Failure : ", String.valueOf(e.getMessage()));
                     }
                 });
             }
         });
+    }
+
+    private void hideProgressbar() {
+        progressBar.setVisibility(View.GONE);
+        Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+    }
+
+    /**
+     * @noinspection deprecation
+     */
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 
     @Override
