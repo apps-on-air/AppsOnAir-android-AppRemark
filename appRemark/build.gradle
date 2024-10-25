@@ -10,7 +10,7 @@ android {
     defaultConfig {
         minSdk 24
         versionCode 1
-        versionName "1.0.0"
+        versionName "0.0.1"
         android {
             buildConfigField 'String', 'BASE_URL', BASE_URL
             buildConfigField 'String', 'VERSION_CODE', VERSION_CODE
@@ -65,7 +65,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.appsonair'
                 artifactId = 'appremark'
-                version = '1.0.0'
+                version = '0.0.1'
             }
         }
     }

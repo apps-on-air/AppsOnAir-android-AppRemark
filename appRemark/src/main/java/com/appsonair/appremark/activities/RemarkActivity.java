@@ -509,9 +509,11 @@ public class RemarkActivity extends AppCompatActivity {
             whereObject.put("appId", appId);
 
             JSONObject dataObject = new JSONObject();
+            if (!companion.getExtraPayload().isEmpty()) {
+                JSONObject metaDataObject = new JSONObject(companion.getExtraPayload());
+                dataObject.put("additionalMetadata", metaDataObject);
+            }
 
-            JSONObject metaDataObject = new JSONObject(companion.getExtraPayload());
-            dataObject.put("additionalMetadata", metaDataObject);
             dataObject.put("description", description);
             dataObject.put("type", RemarkTypeMapper.getType(remarkType));
 
