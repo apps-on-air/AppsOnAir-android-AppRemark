@@ -19,6 +19,7 @@ import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.icu.util.TimeZone;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -73,15 +74,12 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TimeZone;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -280,9 +278,8 @@ public class RemarkActivity extends AppCompatActivity {
 
             Locale locale = getResources().getConfiguration().getLocales().get(0);
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.getDefault());
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            Date now = new Date();
+            TimeZone timeZone = TimeZone.getDefault();
+            String timeZoneId = timeZone.getID();
 
             this.registerReceiver(this.batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
 
@@ -349,7 +346,7 @@ public class RemarkActivity extends AppCompatActivity {
                     .setDeviceOrientation(screenOrientation)
                     .setDeviceRegionCode(locale.getCountry())
                     .setDeviceRegionName(locale.getDisplayCountry())
-                    .setTimestamp(sdf.format(now))
+                    .setTimezone(timeZoneId)
                     .setBuildVersionNumber(String.valueOf(versionCode))
                     .setReleaseVersionNumber(versionName)
                     .setBundleIdentifier(packageName)
@@ -533,7 +530,7 @@ public class RemarkActivity extends AppCompatActivity {
             mapData.put("deviceRegionName", deviceInfo.getDeviceRegionName());
             mapData.put("appName", deviceInfo.getAppName());
             mapData.put("releaseVersionNumber", deviceInfo.getReleaseVersionNumber());
-            mapData.put("timestamp", deviceInfo.getTimestamp());
+            mapData.put("timezone", deviceInfo.getTimezone());
             mapData.put("appsOnAirSDKVersion", deviceInfo.getAppsOnAirSDKVersion());
             mapData.put("networkState", deviceInfo.getNetworkState());
             mapData.put("bundleIdentifier", deviceInfo.getBundleIdentifier());

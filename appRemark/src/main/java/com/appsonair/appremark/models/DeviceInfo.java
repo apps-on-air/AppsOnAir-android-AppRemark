@@ -8,7 +8,7 @@ public class DeviceInfo {
     final String deviceOrientation;
     final String deviceRegionCode;
     final String deviceRegionName;
-    final String timestamp;
+    final String timezone;
     final String buildVersionNumber;
     final String releaseVersionNumber;
     final String bundleIdentifier;
@@ -28,7 +28,7 @@ public class DeviceInfo {
         this.deviceOrientation = builder.deviceOrientation;
         this.deviceRegionCode = builder.deviceRegionCode;
         this.deviceRegionName = builder.deviceRegionName;
-        this.timestamp = builder.timestamp;
+        this.timezone = builder.timezone;
         this.buildVersionNumber = builder.buildVersionNumber;
         this.releaseVersionNumber = builder.releaseVersionNumber;
         this.bundleIdentifier = builder.bundleIdentifier;
@@ -69,8 +69,8 @@ public class DeviceInfo {
         return deviceRegionName;
     }
 
-    public String getTimestamp() {
-        return timestamp;
+    public String getTimezone() {
+        return timezone;
     }
 
     public String getBuildVersionNumber() {
@@ -121,7 +121,7 @@ public class DeviceInfo {
         private String deviceOrientation;
         private String deviceRegionCode;
         private String deviceRegionName;
-        private String timestamp;
+        private String timezone;
         private String buildVersionNumber;
         private String releaseVersionNumber;
         private String bundleIdentifier;
@@ -168,8 +168,8 @@ public class DeviceInfo {
             return this;
         }
 
-        public Builder setTimestamp(String timestamp) {
-            this.timestamp = timestamp;
+        public Builder setTimezone(String timezone) {
+            this.timezone = timezone;
             return this;
         }
 
