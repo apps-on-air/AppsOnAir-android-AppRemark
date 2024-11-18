@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">AppsOnAir-Android-AppRemark</string>
+    <string name="create_new_remark">Create new remark</string>
+    <string name="go_to_next">Go to next</string>
+</resources>
