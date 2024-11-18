@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="remark_type_array">
+        <item>@string/improvement_suggestion</item>
+        <item>@string/bug_report</item>
+    </string-array>
+</resources>
