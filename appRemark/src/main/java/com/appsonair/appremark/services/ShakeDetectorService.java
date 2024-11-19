@@ -6,12 +6,16 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.Uri;
+import android.os.Build;
+import android.os.Handler;
 import android.util.Log;
+import android.view.PixelCopy;
 import android.view.View;
 
 import com.appsonair.appremark.R;
@@ -80,21 +84,50 @@ public class ShakeDetectorService {
                 rootView.setDrawingCacheEnabled(true);
                 Bitmap screenshotBitmap = Bitmap.createBitmap(rootView.getDrawingCache());
                 rootView.setDrawingCacheEnabled(false);
-                String screenshotPath = saveBitmapToFile(screenshotBitmap, context);
-                File imageFile;
-                if (screenshotPath != null) {
-                    imageFile = new File(screenshotPath);
-                    if (imageFile.exists()) {
-                        Uri imageUri = Uri.fromFile(imageFile);
-                        Intent intent = new Intent(context, EditImageActivity.class);
-                        intent.setAction(Intent.ACTION_EDIT);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        intent.putExtra("IMAGE_PATH", imageUri);
-                        context.startActivity(intent);
-                    }
+
+                int[] location = new int[2];
+                rootView.getLocationInWindow(location);
+
+                Rect rect = new Rect(
+                        location[0],
+                        location[1],
+                        location[0] + rootView.getWidth(),
+                        location[1] + rootView.getHeight()
+                );
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    PixelCopy.request(
+                            activity.getWindow(),
+                            rect,
+                            screenshotBitmap,
+                            copyResult -> {
+                                if (copyResult == PixelCopy.SUCCESS) {
+                                    goToImageEditActivity(activity, screenshotBitmap);
+                                }
+                            },
+                            new Handler()
+                    );
+                } else {
+                    goToImageEditActivity(activity, screenshotBitmap);
                 }
+            }
+        }
+    }
+
+    public static void goToImageEditActivity(Context context, Bitmap screenshotBitmap) {
+        String screenshotPath = saveBitmapToFile(screenshotBitmap, context);
+        File imageFile;
+        if (screenshotPath != null) {
+            imageFile = new File(screenshotPath);
+            if (imageFile.exists()) {
+                Uri imageUri = Uri.fromFile(imageFile);
+                Intent intent = new Intent(context, EditImageActivity.class);
+                intent.setAction(Intent.ACTION_EDIT);
+                intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                intent.putExtra("IMAGE_PATH", imageUri);
+                context.startActivity(intent);
             }
         }
     }
