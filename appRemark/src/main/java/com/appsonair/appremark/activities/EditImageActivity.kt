@@ -144,43 +144,45 @@ class EditImageActivity : BaseActivity(), OnPhotoEditorListener, View.OnClickLis
         tvDone.setOnClickListener(this)
     }
 
-    override fun onAddViewListener(viewType: ViewType, numberOfAddedViews: Int) {
+    override fun onAddViewListener(viewType: ViewType?, numberOfAddedViews: Int) {
         Log.d(
             TAG,
             "onAddViewListener() called with: viewType = [$viewType], numberOfAddedViews = [$numberOfAddedViews]"
         )
     }
 
-    override fun onEditTextChangeListener(rootView: View, text: String, colorCode: Int) {
+    override fun onEditTextChangeListener(rootView: View?, text: String?, colorCode: Int) {
         rootView.let {
-            val textEditorDialogFragment = TextEditorDialog.show(this, text, colorCode)
-            textEditorDialogFragment.setOnTextEditorListener(object :
-                TextEditorDialog.TextEditorListener {
-                override fun onDone(inputText: String, colorCode: Int) {
-                    val styleBuilder = TextStyleBuilder()
-                    styleBuilder.withTextColor(colorCode)
-                    mPhotoEditor.editText(it, inputText, styleBuilder)
-                }
-            })
+            text?.let { it1 -> TextEditorDialog.show(this, it1, colorCode) }
+                ?.setOnTextEditorListener(object :
+                    TextEditorDialog.TextEditorListener {
+                    override fun onDone(inputText: String, colorCode: Int) {
+                        val styleBuilder = TextStyleBuilder()
+                        styleBuilder.withTextColor(colorCode)
+                        if (it != null) {
+                            mPhotoEditor.editText(it, inputText, styleBuilder)
+                        }
+                    }
+                })
         }
     }
 
-    override fun onRemoveViewListener(viewType: ViewType, numberOfAddedViews: Int) {
+    override fun onRemoveViewListener(viewType: ViewType?, numberOfAddedViews: Int) {
         Log.d(
             TAG,
             "onRemoveViewListener() called with: viewType = [$viewType], numberOfAddedViews = [$numberOfAddedViews]"
         )
     }
 
-    override fun onStartViewChangeListener(viewType: ViewType) {
+    override fun onStartViewChangeListener(viewType: ViewType?) {
         Log.d(TAG, "onStartViewChangeListener() called with: viewType = [$viewType]")
     }
 
-    override fun onStopViewChangeListener(viewType: ViewType) {
+    override fun onStopViewChangeListener(viewType: ViewType?) {
         Log.d(TAG, "onStopViewChangeListener() called with: viewType = [$viewType]")
     }
 
-    override fun onTouchSourceImage(event: MotionEvent) {
+    override fun onTouchSourceImage(event: MotionEvent?) {
         Log.d(TAG, "onTouchView() called with: event = [$event]")
     }
 
