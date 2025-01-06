@@ -1,11 +1,15 @@
 package com.appsonair.appremark.services
 
-import android.content.Context
 import android.graphics.Color
+import com.appsonair.appremark.R
+import com.appsonair.core.services.CoreService
+import android.util.Log
+import android.content.Context
 
 class AppRemarkService {
 
     companion object {
+        private const val TAG: String = "RemarkActivity"
         //keys
         private const val pageBackgroundColor = "pageBackgroundColor"
         private const val appbarBackgroundColor = "appbarBackgroundColor"
@@ -103,6 +107,10 @@ class AppRemarkService {
             shakeGestureEnable: Boolean = true,
             options: Map<String, Any> = OPTIONS.toMutableMap(),
         ) {
+            val appId = CoreService.getAppId(context)
+            if (appId.isEmpty()) {
+                Log.d(TAG, "AppId: ${context.getString(R.string.error_something_wrong)}")
+            }
             val contextStr = context.toString()
             if (!contextStr.startsWith("com.appsonair.appremark")) {
                 val mutableMap = options.toMutableMap()
