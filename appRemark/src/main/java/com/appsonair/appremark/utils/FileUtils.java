@@ -13,6 +13,42 @@ import java.io.InputStream;
 import java.util.Objects;
 
 public class FileUtils {
+    public static double getFileSize(Context context, Uri uri) {
+        double size = 0;
+
+        try {
+            // For gallery
+            if (Objects.equals(uri.getScheme(), "content")) {
+                Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+                try {
+                    if (cursor != null && cursor.moveToFirst()) {
+                        int sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE);
+                        size = cursor.getLong(sizeIndex); // Get the file size in bytes
+                    }
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                }
+            }
+            // For screenshot
+            else if (Objects.equals(uri.getScheme(), "file")) {
+                File file = new File(uri.getPath());
+                if (file.exists()) {
+                    size = file.length(); // Get the file size in bytes
+                }
+            }
+            // Convert size to MB and round to 2 decimal places
+            size = size / (1024.0 * 1024.0);
+            size = Math.round(size * 100.0) / 100.0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return size;
+    }
+
     public static String getFileName(Context context, Uri uri) {
         String result = null;
         if (Objects.equals(uri.getScheme(), "content")) {

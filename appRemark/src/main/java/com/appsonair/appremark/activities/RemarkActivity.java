@@ -6,6 +6,7 @@ import static com.appsonair.appremark.utils.AppUtils.getTotalStorageSize;
 import static com.appsonair.appremark.utils.FileUtils.getFileFromUri;
 import static com.appsonair.appremark.utils.FileUtils.getFileName;
 import static com.appsonair.appremark.utils.FileUtils.getFileType;
+import static com.appsonair.appremark.utils.FileUtils.getFileSize;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
@@ -185,12 +186,14 @@ public class RemarkActivity extends AppCompatActivity {
             Uri imagePath = intent.getParcelableExtra("IMAGE_PATH");
             if (imagePath != null) {
                 String fileName = getFileName(this, imagePath);
-
+                // Get image file size
+                double imageSize = getFileSize(this, imagePath);
                 String fileType = getFileType(this, imagePath);
                 ImageData imageData = new ImageData.Builder()
                         .setImageUri(imagePath)
                         .setFileName(fileName)
                         .setFileType(fileType)
+                        .setFileSize(imageSize)
                         .build();
                 imageList.add(imageData);
                 imageAdapter.notifyItemInserted(imageList.size() - 1);
@@ -211,10 +214,13 @@ public class RemarkActivity extends AppCompatActivity {
                 if (selectedImage != null) {
                     String fileName = getFileName(this, selectedImage);
                     String fileType = getFileType(this, selectedImage);
+                    // Get image file size
+                    double imageSize = getFileSize(this, selectedImage);
                     ImageData imageData = new ImageData.Builder()
                             .setImageUri(selectedImage)
                             .setFileName(fileName)
                             .setFileType(fileType)
+                            .setFileSize(imageSize)
                             .build();
                     imageList.add(imageData);
                     if (imageList.size() > 1) {
@@ -476,6 +482,7 @@ public class RemarkActivity extends AppCompatActivity {
                             RemarkFileInfo remarkFileInfo = new RemarkFileInfo.Builder()
                                     .setKey(fileUrl)
                                     .setFileType(imageData.getFileType())
+                                    .setFileSize(imageData.getFileSize())
                                     .build();
                             remarkFileInfoList.add(remarkFileInfo);
                             if (imageList.size() == remarkFileInfoList.size()) {
