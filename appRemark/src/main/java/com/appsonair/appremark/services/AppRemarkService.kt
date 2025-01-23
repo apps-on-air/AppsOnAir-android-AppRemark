@@ -8,24 +8,34 @@ import android.content.Context
 
 class AppRemarkService {
 
+    internal object RemarkOptionsKey {
+         const val pageBackgroundColor = "pagebackgroundcolor"
+         const val appBarBackgroundColor = "appbarbackgroundcolor"
+         const val appBarTitleText = "appbartitletext"
+         const val appBarTitleColor = "appbartitlecolor"
+         const val remarkTypeLabelText = "remarktypelabeltext"
+         const val descriptionLabelText = "descriptionlabeltext"
+         const val descriptionHintText = "descriptionhinttext"
+         const val descriptionMaxLength = "descriptionmaxlength"
+         const val buttonText = "buttontext"
+         const val buttonTextColor = "buttontextcolor"
+         const val buttonBackgroundColor = "buttonbackgroundcolor"
+         const val labelColor = "labelcolor"
+         const val hintColor = "hintcolor"
+         const val inputTextColor = "inputtextcolor"
+
+       fun getOptions(): Map<String, Any> {
+            return options
+        }
+
+        fun getExtraPayload(): Map<String, Any> {
+            return extraPayload
+        }
+    }
+
+
     companion object {
         private const val TAG: String = "RemarkActivity"
-        //keys
-        private const val pageBackgroundColor = "pageBackgroundColor"
-        private const val appbarBackgroundColor = "appbarBackgroundColor"
-        private const val appbarTitleText = "appbarTitleText"
-        private const val appbarTitleColor = "appbarTitleColor"
-        private const val remarkTypeLabelText = "remarkTypeLabelText"
-        private const val descriptionLabelText = "descriptionLabelText"
-        private const val descriptionHintText = "descriptionHintText"
-        private const val descriptionMaxLength = "descriptionMaxLength"
-        private const val buttonText = "buttonText"
-        private const val buttonTextColor = "buttonTextColor"
-        private const val buttonBackgroundColor = "buttonBackgroundColor"
-        private const val labelColor = "labelColor"
-        private const val hintColor = "hintColor"
-        private const val inputTextColor = "inputTextColor"
-
         //values
         private const val PAGE_BACKGROUND_COLOR = "#E8F1FF"
         private const val APP_BAR_BACKGROUND_COLOR = "#E8F1FF"
@@ -43,25 +53,25 @@ class AppRemarkService {
         private const val INPUT_TEXT_COLOR = "#000000"
 
         private val OPTIONS: Map<String, Any> = mutableMapOf(
-            pageBackgroundColor to PAGE_BACKGROUND_COLOR,
-            appbarBackgroundColor to APP_BAR_BACKGROUND_COLOR,
-            appbarTitleText to APP_BAR_TITLE_TEXT,
-            appbarTitleColor to APP_BAR_TITLE_COLOR,
-            remarkTypeLabelText to REMARK_TYPE_LABEL_TEXT,
-            descriptionLabelText to DESCRIPTION_LABEL_TEXT,
-            descriptionHintText to DESCRIPTION_HINT_TEXT,
-            descriptionMaxLength to DESCRIPTION_MAX_LENGTH,
-            buttonText to BUTTON_TEXT,
-            buttonTextColor to BUTTON_TEXT_COLOR,
-            buttonBackgroundColor to BUTTON_BACKGROUND_COLOR,
-            labelColor to LABEL_COLOR,
-            hintColor to HINT_COLOR,
-            inputTextColor to INPUT_TEXT_COLOR
+            RemarkOptionsKey.pageBackgroundColor to PAGE_BACKGROUND_COLOR,
+            RemarkOptionsKey.appBarBackgroundColor to APP_BAR_BACKGROUND_COLOR,
+            RemarkOptionsKey. appBarTitleText to APP_BAR_TITLE_TEXT,
+            RemarkOptionsKey.appBarTitleColor to APP_BAR_TITLE_COLOR,
+            RemarkOptionsKey.remarkTypeLabelText to REMARK_TYPE_LABEL_TEXT,
+            RemarkOptionsKey.descriptionLabelText to DESCRIPTION_LABEL_TEXT,
+            RemarkOptionsKey.descriptionHintText to DESCRIPTION_HINT_TEXT,
+            RemarkOptionsKey.descriptionMaxLength to DESCRIPTION_MAX_LENGTH,
+            RemarkOptionsKey.buttonText to BUTTON_TEXT,
+            RemarkOptionsKey. buttonTextColor to BUTTON_TEXT_COLOR,
+            RemarkOptionsKey. buttonBackgroundColor to BUTTON_BACKGROUND_COLOR,
+            RemarkOptionsKey.labelColor to LABEL_COLOR,
+            RemarkOptionsKey.hintColor to HINT_COLOR,
+            RemarkOptionsKey.inputTextColor to INPUT_TEXT_COLOR
         )
 
-        var shakeGestureEnable: Boolean = true
-        var extraPayload: Map<String, Any> = emptyMap()
-        var options: Map<String, Any> = OPTIONS.toMutableMap()
+        private var shakeGestureEnable: Boolean = true
+        private var extraPayload: Map<String, Any> = emptyMap()
+        private var options: Map<String, Any> = OPTIONS.mapKeys {it.key.lowercase()}.toMutableMap()
 
         private fun isValidColorHex(colorHex: String): Boolean {
             return try {
@@ -113,40 +123,40 @@ class AppRemarkService {
             }
             val contextStr = context.toString()
             if (!contextStr.startsWith("com.appsonair.appremark")) {
-                val mutableMap = options.toMutableMap()
-                mutableMap[pageBackgroundColor] =
-                    if (pageBackgroundColor.isValidStringColor(mutableMap))
-                        mutableMap[pageBackgroundColor].toString() else PAGE_BACKGROUND_COLOR
-                mutableMap[appbarBackgroundColor] =
-                    if (appbarBackgroundColor.isValidStringColor(mutableMap))
-                        mutableMap[appbarBackgroundColor].toString() else APP_BAR_BACKGROUND_COLOR
-                mutableMap[appbarTitleText] = if (appbarTitleText.isValidString(mutableMap))
-                    mutableMap[appbarTitleText].toString() else APP_BAR_TITLE_TEXT
-                mutableMap[appbarTitleColor] = if (appbarTitleColor.isValidStringColor(mutableMap))
-                    mutableMap[appbarTitleColor].toString() else APP_BAR_TITLE_COLOR
-                mutableMap[remarkTypeLabelText] = if (remarkTypeLabelText.isValidString(mutableMap))
-                    mutableMap[remarkTypeLabelText].toString() else REMARK_TYPE_LABEL_TEXT
-                mutableMap[descriptionLabelText] =
-                    if (descriptionLabelText.isValidString(mutableMap))
-                        mutableMap[descriptionLabelText].toString() else DESCRIPTION_LABEL_TEXT
-                mutableMap[descriptionHintText] = if (descriptionHintText.isValidString(mutableMap))
-                    mutableMap[descriptionHintText].toString() else DESCRIPTION_HINT_TEXT
-                mutableMap[descriptionMaxLength] = if (descriptionMaxLength.isValidInt(mutableMap))
-                    mutableMap[descriptionMaxLength].toString().toInt() else DESCRIPTION_MAX_LENGTH
-                mutableMap[buttonText] = if (buttonText.isValidString(mutableMap))
-                    mutableMap[buttonText].toString() else BUTTON_TEXT
-                mutableMap[buttonTextColor] = if (buttonTextColor.isValidStringColor(mutableMap))
-                    mutableMap[buttonTextColor].toString() else BUTTON_TEXT_COLOR
-                mutableMap[buttonBackgroundColor] =
-                    if (buttonBackgroundColor.isValidStringColor(mutableMap))
-                        mutableMap[buttonBackgroundColor].toString() else BUTTON_BACKGROUND_COLOR
-                mutableMap[labelColor] = if (labelColor.isValidStringColor(mutableMap))
-                    mutableMap[labelColor].toString() else LABEL_COLOR
-                mutableMap[hintColor] = if (hintColor.isValidStringColor(mutableMap))
-                    mutableMap[hintColor].toString() else HINT_COLOR
-                mutableMap[inputTextColor] = if (inputTextColor.isValidStringColor(mutableMap))
-                    mutableMap[inputTextColor].toString() else INPUT_TEXT_COLOR
-                Companion.options = mutableMap
+              val mutableMap = options.mapKeys {it.key.lowercase()}.toMutableMap()
+                mutableMap[RemarkOptionsKey.pageBackgroundColor] =
+                    if (RemarkOptionsKey.pageBackgroundColor.isValidStringColor(mutableMap))
+                        mutableMap[RemarkOptionsKey.pageBackgroundColor].toString() else PAGE_BACKGROUND_COLOR
+                mutableMap[RemarkOptionsKey.appBarBackgroundColor] =
+                    if (RemarkOptionsKey.appBarBackgroundColor.isValidStringColor(mutableMap))
+                        mutableMap[RemarkOptionsKey.appBarBackgroundColor].toString() else APP_BAR_BACKGROUND_COLOR
+                mutableMap[RemarkOptionsKey.appBarTitleText] = if (RemarkOptionsKey.appBarTitleText.isValidString(mutableMap))
+                    mutableMap[RemarkOptionsKey.appBarTitleText].toString() else APP_BAR_TITLE_TEXT
+                mutableMap[RemarkOptionsKey.appBarTitleColor] = if (RemarkOptionsKey.appBarTitleColor.isValidStringColor(mutableMap))
+                    mutableMap[RemarkOptionsKey.appBarTitleColor].toString() else APP_BAR_TITLE_COLOR
+                mutableMap[RemarkOptionsKey.remarkTypeLabelText] = if (RemarkOptionsKey.remarkTypeLabelText.isValidString(mutableMap))
+                    mutableMap[RemarkOptionsKey.remarkTypeLabelText].toString() else REMARK_TYPE_LABEL_TEXT
+                mutableMap[RemarkOptionsKey.descriptionLabelText] =
+                    if (RemarkOptionsKey.descriptionLabelText.isValidString(mutableMap))
+                        mutableMap[RemarkOptionsKey.descriptionLabelText].toString() else DESCRIPTION_LABEL_TEXT
+                mutableMap[RemarkOptionsKey.descriptionHintText] = if (RemarkOptionsKey.descriptionHintText.isValidString(mutableMap))
+                    mutableMap[RemarkOptionsKey.descriptionHintText].toString() else DESCRIPTION_HINT_TEXT
+                mutableMap[RemarkOptionsKey.descriptionMaxLength] = if (RemarkOptionsKey.descriptionMaxLength.isValidInt(mutableMap))
+                    mutableMap[RemarkOptionsKey.descriptionMaxLength].toString().toInt() else DESCRIPTION_MAX_LENGTH
+                mutableMap[RemarkOptionsKey.buttonText] = if (RemarkOptionsKey.buttonText.isValidString(mutableMap))
+                    mutableMap[RemarkOptionsKey.buttonText].toString() else BUTTON_TEXT
+                mutableMap[RemarkOptionsKey.buttonTextColor] = if (RemarkOptionsKey.buttonTextColor.isValidStringColor(mutableMap))
+                    mutableMap[RemarkOptionsKey.buttonTextColor].toString() else BUTTON_TEXT_COLOR
+                mutableMap[RemarkOptionsKey.buttonBackgroundColor] =
+                    if (RemarkOptionsKey.buttonBackgroundColor.isValidStringColor(mutableMap))
+                        mutableMap[RemarkOptionsKey.buttonBackgroundColor].toString() else BUTTON_BACKGROUND_COLOR
+                mutableMap[RemarkOptionsKey.labelColor] = if (RemarkOptionsKey.labelColor.isValidStringColor(mutableMap))
+                    mutableMap[RemarkOptionsKey.labelColor].toString() else LABEL_COLOR
+                mutableMap[RemarkOptionsKey.hintColor] = if (RemarkOptionsKey.hintColor.isValidStringColor(mutableMap))
+                    mutableMap[RemarkOptionsKey.hintColor].toString() else HINT_COLOR
+                mutableMap[RemarkOptionsKey.inputTextColor] = if (RemarkOptionsKey.inputTextColor.isValidStringColor(mutableMap))
+                    mutableMap[RemarkOptionsKey.inputTextColor].toString() else INPUT_TEXT_COLOR
+                Companion.options = mutableMap.mapKeys {it.key.lowercase()}.toMutableMap()
                 Companion.shakeGestureEnable = shakeGestureEnable
                 if (Companion.shakeGestureEnable) {
                     ShakeDetectorService.shakeDetect(context)
