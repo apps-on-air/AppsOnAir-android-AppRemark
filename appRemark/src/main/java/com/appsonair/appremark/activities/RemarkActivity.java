@@ -6,14 +6,12 @@ import static com.appsonair.appremark.utils.FileUtils.getFileType;
 import static com.appsonair.appremark.utils.FileUtils.getFileSize;
 
 import android.annotation.SuppressLint;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.net.Uri;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.InputFilter;
@@ -50,21 +48,16 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -83,7 +76,6 @@ public class RemarkActivity extends AppCompatActivity {
     ProgressBar progressBar;
     private ImageAdapter imageAdapter;
     private ActivityResultLauncher<Intent> activityResultLauncher;
-    private String screenOrientation;
     private boolean hasNetwork;
 
     @Override
@@ -91,7 +83,6 @@ public class RemarkActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_remark);
         NetworkService.checkConnectivity(this, isAvailable -> hasNetwork = isAvailable);
-
 
         //init views
         LinearLayout linearLayout = findViewById(R.id.ll_main);
@@ -124,31 +115,32 @@ public class RemarkActivity extends AppCompatActivity {
                 imageAdapter.notifyDataSetChanged();
             }
         });
+
         recyclerView.setAdapter(imageAdapter);
 
-        linearLayout.setBackgroundColor(parseColorToInt(getOption( AppRemarkService.RemarkOptionsKey.pageBackgroundColor)));
+        linearLayout.setBackgroundColor(parseColorToInt(getOption( AppRemarkService.Properties.pageBackgroundColor)));
 
-        llAppbar.setBackgroundColor(parseColorToInt(getOption(AppRemarkService.RemarkOptionsKey.appBarBackgroundColor)));
-        tvAppbarTitle.setText(getOption(AppRemarkService.RemarkOptionsKey.appBarTitleText));
-        tvAppbarTitle.setTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.appBarTitleColor)));
+        llAppbar.setBackgroundColor(parseColorToInt(getOption(AppRemarkService.Properties.appBarBackgroundColor)));
+        tvAppbarTitle.setText(getOption(AppRemarkService.Properties.appBarTitleText));
+        tvAppbarTitle.setTextColor(parseColor(getOption(AppRemarkService.Properties.appBarTitleColor)));
 
-        tvRemarkType.setText(getOption(AppRemarkService.RemarkOptionsKey.remarkTypeLabelText));
-        tvRemarkType.setTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.labelColor)));
+        tvRemarkType.setText(getOption(AppRemarkService.Properties.remarkTypeLabelText));
+        tvRemarkType.setTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
 
-        tvDescription.setText(getOption(AppRemarkService.RemarkOptionsKey.descriptionLabelText));
-        tvDescription.setTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.labelColor)));
-        etDescription.setTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.inputTextColor)));
+        tvDescription.setText(getOption(AppRemarkService.Properties.descriptionLabelText));
+        tvDescription.setTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
+        etDescription.setTextColor(parseColor(getOption(AppRemarkService.Properties.inputTextColor)));
         InputFilter[] filters = new InputFilter[1];
-        filters[0] = new InputFilter.LengthFilter(Integer.parseInt(getOption(AppRemarkService.RemarkOptionsKey.descriptionMaxLength)) );
+        filters[0] = new InputFilter.LengthFilter(Integer.parseInt(getOption(AppRemarkService.Properties.descriptionMaxLength)) );
         etDescription.setFilters(filters);
-        tilDescription.setCounterMaxLength(Integer.parseInt(getOption(AppRemarkService.RemarkOptionsKey.descriptionMaxLength)));
-        tilDescription.setCounterTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.labelColor)));
-        tilDescription.setPlaceholderText(getOption(AppRemarkService.RemarkOptionsKey.descriptionHintText));
-        tilDescription.setPlaceholderTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.hintColor)));
+        tilDescription.setCounterMaxLength(Integer.parseInt(getOption(AppRemarkService.Properties.descriptionMaxLength)));
+        tilDescription.setCounterTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
+        tilDescription.setPlaceholderText(getOption(AppRemarkService.Properties.descriptionHintText));
+        tilDescription.setPlaceholderTextColor(parseColor(getOption(AppRemarkService.Properties.hintColor)));
 
-        btnSubmit.setText(getOption(AppRemarkService.RemarkOptionsKey.buttonText));
-        btnSubmit.setTextColor(parseColor(getOption(AppRemarkService.RemarkOptionsKey.buttonTextColor)));
-        btnSubmit.setBackgroundTintList(parseColor(getOption(AppRemarkService.RemarkOptionsKey.buttonBackgroundColor)));
+        btnSubmit.setText(getOption(AppRemarkService.Properties.buttonText));
+        btnSubmit.setTextColor(parseColor(getOption(AppRemarkService.Properties.buttonTextColor)));
+        btnSubmit.setBackgroundTintList(parseColor(getOption(AppRemarkService.Properties.buttonBackgroundColor)));
 
         // Retrieve image path from Intent extras
         Intent intent = getIntent();
@@ -227,7 +219,7 @@ public class RemarkActivity extends AppCompatActivity {
     }
 
     private String getOption(String key) {
-        return String.valueOf(AppRemarkService.RemarkOptionsKey.INSTANCE.getOptions().get(key));
+        return String.valueOf(AppRemarkService.Properties.INSTANCE.getOptions().get(key));
     }
 
     private void openGallery() {
@@ -370,64 +362,24 @@ public class RemarkActivity extends AppCompatActivity {
 
         JSONObject jsonObject = new JSONObject();
         try {
-            // JSONObject deviceInfos = CoreService.getDeviceInfo(this, Collections.emptyMap());
             Map<String, Object> additionalInfo = Collections.singletonMap("appRemarkVersion", BuildConfig.VERSION_NAME);
-            JSONObject deviceInfoWithAdditionalInfo = CoreService.getDeviceInfo(this, additionalInfo);
+            JSONObject deviceInfoWithAdditionalInfo = CoreService.getDeviceInfo(this, additionalInfo); // if you don't want to pass additionalInfo then just pass [Collections.emptyMap()]
             JSONObject appInfo = deviceInfoWithAdditionalInfo.getJSONObject("appInfo");
             JSONObject deviceInfo = deviceInfoWithAdditionalInfo.getJSONObject("deviceInfo");
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 
             JSONObject dataObject = new JSONObject();
-            if (!AppRemarkService.RemarkOptionsKey.INSTANCE.getOptions().isEmpty()) {
-                JSONObject metaDataObject = new JSONObject(AppRemarkService.RemarkOptionsKey.INSTANCE.getExtraPayload());
+            if (!AppRemarkService.Properties.INSTANCE.getOptions().isEmpty()) {
+                JSONObject metaDataObject = new JSONObject(AppRemarkService.Properties.INSTANCE.getExtraPayload());
                 dataObject.put("additionalMetadata", metaDataObject);
             }
 
             dataObject.put("description", description);
             dataObject.put("type", RemarkTypeMapper.getType(remarkType));
 
-            Map<String, Object> mapData = new HashMap<>();
-
-            Iterator<String> appInfoKey = appInfo.keys();
-            while (appInfoKey.hasNext()) {
-                String key = appInfoKey.next();
-                Object value = appInfo.get(key); // Get the value for the key
-                mapData.put(key, value);         // Add the key-value pair to the map
-            }
-
-
-            Iterator<String> deviceInfoKey = deviceInfo.keys();
-            while (deviceInfoKey.hasNext()) {
-                String key = deviceInfoKey.next();
-                Object value = deviceInfo.get(key); // Get the value for the key
-                mapData.put(key, value);         // Add the key-value pair to the map
-            }
-
-
-/*
--------Commented the previous code for future reference
-            mapData.put("deviceModel", deviceInfo.getString("deviceModel"));
-            mapData.put("deviceUsedStorage", deviceInfo.getString("deviceUsedStorage"));
-            mapData.put("deviceTotalStorage", deviceInfo.getString("deviceTotalStorage"));
-            mapData.put("deviceMemory", deviceInfo.getString("deviceMemory"));
-            mapData.put("appMemoryUsage", deviceInfo.getString("appMemoryUsage"));
-            mapData.put("deviceOrientation", deviceInfo.getString("deviceOrientation"));
-            mapData.put("buildVersionNumber", appInfo.getString("buildVersionNumber"));
-            mapData.put("deviceOsVersion", deviceInfo.getString("deviceOsVersion"));
-            mapData.put("deviceRegionCode",deviceInfo.getString("deviceRegionCode"));
-            mapData.put("deviceBatteryLevel", deviceInfo.getInt("deviceBatteryLevel"));
-            mapData.put("deviceScreenSize", deviceInfo.getString("deviceScreenSize"));
-            mapData.put("deviceRegionName", deviceInfo.getString("deviceRegionName"));
-            mapData.put("appName", appInfo.getString("appName"));
-            mapData.put("releaseVersionNumber", appInfo.getString("releaseVersionNumber"));
-            mapData.put("timezone",  deviceInfo.getString("timezone"));
-            mapData.put("appsOnAirSDKVersion", appInfo.getString("appsOnAirCoreVersion"));
-            mapData.put("networkState",  deviceInfo.getString("networkState"));
-            mapData.put("bundleIdentifier", appInfo.getString("bundleIdentifier"));
-*/
-            JSONObject deviceObject = new JSONObject(mapData);
-            dataObject.put("deviceInfo", deviceObject);
+            dataObject.put("deviceInfo", deviceInfo);
+            dataObject.put("appInfo", appInfo);
 
             if (!remarkFileInfoList.isEmpty()) {
                 Gson gson = new Gson();

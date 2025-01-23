@@ -19,20 +19,20 @@ class MyApp : Application() {
             override fun onActivityResumed(activity: Activity) {
 
                 val options = mutableMapOf(
-                    "pageBackGroundColor" to "#00FF00",
-                    "appBarBackGroundColor" to "#FFFFFF",
-                    "descriptionlabeltext" to "Description label text",
-                    "appbartitlecolor" to "#FF0000",
-                    "remarktypelabelText" to "remarktypelabeltext",
-                    "descriptionhinttext" to "descriptionhinttext",
-                    "descriptionMaxLength" to "100",
-                    "buttontext" to "Submit Button",
-                    "buttontextcolor" to "#000000",
-                    "labelcolor" to "#008080",
-                    "buttonbackgroundcolor" to "#FFFFC5",
-                    "inputtextcolor" to "#121D45",
-                    "hintcolor" to "#FFC0CB",
-                    "APPBARTITLETEXT" to "Title Text"
+                    "pageBackGroundColor" to "#007AFF",
+                    "appBarBackGroundColor" to "#1c1c9e",
+                    "descriptionLabelText" to "Add description here",
+                    "appBarTitleColor" to "#FFFFFF",
+                    "remarkTypeLabelText" to "Add Remark here",
+                    "descriptionHintText" to "Add description here..",
+                    "descriptionMaxLength" to "120",
+                    "buttonText" to "Submit Remark",
+                    "buttonTextColor" to "#000000",
+                    "labelColor" to "#FFFFFF",
+                    "buttonBackgroundColor" to "#FFFFFF",
+                    "inputTextColor" to "#000000",
+                    "hintColor" to "#000000",
+                    "appBarTitleText" to "Feedback Screen"
                 )
 
                 //with default theme
