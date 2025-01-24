@@ -105,15 +105,15 @@ Users have to pass given keys into "options". Using "options", this SDK will set
 >Make sure keys are same as below.
 
 | Key                     | DataType | Value                       | Description                    |
-| :---------------------- | :------- | :-------------------------- | :----------------------------- |
+|:------------------------| :------- | :-------------------------- | :----------------------------- |
 | `pageBackgroundColor`   | `String` | `"#E8F1FF"`               | Set page background color      |
-| `appbarBackgroundColor` | `String` | `"#E8F1FF"`               | Set appbar background color    |
-| `appbarTitleText`       | `String` | `"Add Remark"`              | Set appbar title text          |
-| `appbarTitleColor`      | `String` | `"#000000"`               | Set appbar title color         |
+| `appBarBackgroundColor` | `String` | `"#E8F1FF"`               | Set appbar background color    |
+| `appBarTitleText`       | `String` | `"Add Remark"`              | Set appbar title text          |
+| `appBarTitleColor`      | `String` | `"#000000"`               | Set appbar title color         |
 | `remarkTypeLabelText`   | `String` | `"Remark Type"`             | Set remark type label text     |
 | `descriptionLabelText`  | `String` | `"Description"`             | Set description label text     |
-| `descriptionHintText`   | `int`    | `"Add description here..."` | Set description hint text      |
-| `descriptionMaxLength`  | `String` | `255`                       | Set description max length     |
+| `descriptionHintText`   | `String` | `"Add description here..."` | Set description hint text      |
+| `descriptionMaxLength`  | `int`    | `255`                       | Set description max length     |
 | `buttonText`            | `String` | `"Submit"`                  | Set button text                |
 | `buttonTextColor`       | `String` | `"#FFFFFF"`               | Set button text color          |
 | `buttonBackgroundColor` | `String` | `"#007AFF"`               | Set button background color    |

@@ -1,40 +1,22 @@
 package com.appsonair.appremark.activities;
 
-import static com.appsonair.appremark.utils.AppUtils.getAvailableMemory;
-import static com.appsonair.appremark.utils.AppUtils.getReadableStorageSize;
-import static com.appsonair.appremark.utils.AppUtils.getTotalStorageSize;
 import static com.appsonair.appremark.utils.FileUtils.getFileFromUri;
 import static com.appsonair.appremark.utils.FileUtils.getFileName;
 import static com.appsonair.appremark.utils.FileUtils.getFileType;
+import static com.appsonair.appremark.utils.FileUtils.getFileSize;
 
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
-import android.content.res.Configuration;
 import android.graphics.Color;
-import android.icu.util.TimeZone;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
-import android.os.BatteryManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Debug;
 import android.provider.MediaStore;
 import android.text.InputFilter;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowInsets;
-import android.view.WindowManager;
-import android.view.WindowMetrics;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -54,7 +36,6 @@ import com.appsonair.appremark.BuildConfig;
 import com.appsonair.appremark.R;
 import com.appsonair.appremark.adapters.ImageAdapter;
 import com.appsonair.appremark.interfaces.OnItemClickListener;
-import com.appsonair.appremark.models.DeviceInfo;
 import com.appsonair.appremark.models.ImageData;
 import com.appsonair.appremark.models.RemarkFileInfo;
 import com.appsonair.appremark.services.AppRemarkService;
@@ -67,20 +48,18 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.gson.Gson;
 import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.MediaType;
@@ -95,22 +74,10 @@ public class RemarkActivity extends AppCompatActivity {
     private static final int PICK_IMAGE = 100;
     private final List<ImageData> imageList = new ArrayList<>();
     private final List<RemarkFileInfo> remarkFileInfoList = new ArrayList<>();
-    AppRemarkService.Companion companion = AppRemarkService.Companion;
     String remarkType, description, appId;
-    DeviceInfo deviceInfo;
     ProgressBar progressBar;
     private ImageAdapter imageAdapter;
     private ActivityResultLauncher<Intent> activityResultLauncher;
-    private float batteryLevel;
-    private final BroadcastReceiver batteryInfoReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            batteryLevel = level * 100 / (float) scale;
-        }
-    };
-    private String screenOrientation;
     private boolean hasNetwork;
 
     @Override
@@ -118,8 +85,6 @@ public class RemarkActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_remark);
         NetworkService.checkConnectivity(this, isAvailable -> hasNetwork = isAvailable);
-
-        deviceInfo = new DeviceInfo.Builder().build();
 
         //init views
         LinearLayout linearLayout = findViewById(R.id.ll_main);
@@ -152,32 +117,32 @@ public class RemarkActivity extends AppCompatActivity {
                 imageAdapter.notifyDataSetChanged();
             }
         });
+
         recyclerView.setAdapter(imageAdapter);
 
-        linearLayout.setBackgroundColor(parseColorToInt(getOption("pageBackgroundColor")));
+        linearLayout.setBackgroundColor(parseColorToInt(getOption( AppRemarkService.Properties.pageBackgroundColor)));
 
-        llAppbar.setBackgroundColor(parseColorToInt(getOption("appbarBackgroundColor")));
-        tvAppbarTitle.setText(getOption("appbarTitleText"));
-        tvAppbarTitle.setTextColor(parseColor(getOption("appbarTitleColor")));
+        llAppbar.setBackgroundColor(parseColorToInt(getOption(AppRemarkService.Properties.appBarBackgroundColor)));
+        tvAppbarTitle.setText(getOption(AppRemarkService.Properties.appBarTitleText));
+        tvAppbarTitle.setTextColor(parseColor(getOption(AppRemarkService.Properties.appBarTitleColor)));
 
-        tvRemarkType.setText(getOption("remarkTypeLabelText"));
-        tvRemarkType.setTextColor(parseColor(getOption("labelColor")));
+        tvRemarkType.setText(getOption(AppRemarkService.Properties.remarkTypeLabelText));
+        tvRemarkType.setTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
 
-        tvDescription.setText(getOption("descriptionLabelText"));
-        tvDescription.setTextColor(parseColor(getOption("labelColor")));
-        etDescription.setTextColor(parseColor(getOption("inputTextColor")));
+        tvDescription.setText(getOption(AppRemarkService.Properties.descriptionLabelText));
+        tvDescription.setTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
+        etDescription.setTextColor(parseColor(getOption(AppRemarkService.Properties.inputTextColor)));
         InputFilter[] filters = new InputFilter[1];
-        filters[0] = new InputFilter.LengthFilter(getMaxLength());
+        filters[0] = new InputFilter.LengthFilter(Integer.parseInt(getOption(AppRemarkService.Properties.descriptionMaxLength)) );
         etDescription.setFilters(filters);
+        tilDescription.setCounterMaxLength(Integer.parseInt(getOption(AppRemarkService.Properties.descriptionMaxLength)));
+        tilDescription.setCounterTextColor(parseColor(getOption(AppRemarkService.Properties.labelColor)));
+        tilDescription.setPlaceholderText(getOption(AppRemarkService.Properties.descriptionHintText));
+        tilDescription.setPlaceholderTextColor(parseColor(getOption(AppRemarkService.Properties.hintColor)));
 
-        tilDescription.setCounterMaxLength(getMaxLength());
-        tilDescription.setCounterTextColor(parseColor(getOption("labelColor")));
-        tilDescription.setPlaceholderText(getOption("descriptionHintText"));
-        tilDescription.setPlaceholderTextColor(parseColor(getOption("hintColor")));
-
-        btnSubmit.setText(getOption("buttonText"));
-        btnSubmit.setTextColor(parseColor(getOption("buttonTextColor")));
-        btnSubmit.setBackgroundTintList(parseColor(getOption("buttonBackgroundColor")));
+        btnSubmit.setText(getOption(AppRemarkService.Properties.buttonText));
+        btnSubmit.setTextColor(parseColor(getOption(AppRemarkService.Properties.buttonTextColor)));
+        btnSubmit.setBackgroundTintList(parseColor(getOption(AppRemarkService.Properties.buttonBackgroundColor)));
 
         // Retrieve image path from Intent extras
         Intent intent = getIntent();
@@ -185,12 +150,14 @@ public class RemarkActivity extends AppCompatActivity {
             Uri imagePath = intent.getParcelableExtra("IMAGE_PATH");
             if (imagePath != null) {
                 String fileName = getFileName(this, imagePath);
-
+                // Get image file size
+                double imageSize = getFileSize(this, imagePath);
                 String fileType = getFileType(this, imagePath);
                 ImageData imageData = new ImageData.Builder()
                         .setImageUri(imagePath)
                         .setFileName(fileName)
                         .setFileType(fileType)
+                        .setFileSize(imageSize)
                         .build();
                 imageList.add(imageData);
                 imageAdapter.notifyItemInserted(imageList.size() - 1);
@@ -211,10 +178,13 @@ public class RemarkActivity extends AppCompatActivity {
                 if (selectedImage != null) {
                     String fileName = getFileName(this, selectedImage);
                     String fileType = getFileType(this, selectedImage);
+                    // Get image file size
+                    double imageSize = getFileSize(this, selectedImage);
                     ImageData imageData = new ImageData.Builder()
                             .setImageUri(selectedImage)
                             .setFileName(fileName)
                             .setFileType(fileType)
+                            .setFileSize(imageSize)
                             .build();
                     imageList.add(imageData);
                     if (imageList.size() > 1) {
@@ -227,9 +197,6 @@ public class RemarkActivity extends AppCompatActivity {
 
         btnSubmit.setOnClickListener(view -> {
             description = Objects.requireNonNullElse(etDescription.getText(), "").toString().trim();
-            if (description.isEmpty()) {
-                etDescription.setError(getResources().getString(R.string.description_required));
-            } else {
                 hideKeyboard();
                 etDescription.setError(null);
                 if (hasNetwork) {
@@ -250,117 +217,11 @@ public class RemarkActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Please check your internet connection!", Toast.LENGTH_SHORT).show();
                 }
-            }
         });
-        getDeviceInfo();
     }
 
     private String getOption(String key) {
-        return String.valueOf(companion.getOptions().get(key));
-    }
-
-    private int getMaxLength() {
-        //noinspection DataFlowIssue
-        return (int) companion.getOptions().get("descriptionMaxLength");
-    }
-
-    private void getDeviceInfo() {
-        try {
-            PackageManager packageManager = getPackageManager();
-            String packageName = getPackageName();
-
-            PackageInfo packageInfo = packageManager.getPackageInfo(packageName, 0);
-            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
-            String appName = (String) packageManager.getApplicationLabel(applicationInfo);
-
-            String versionName = packageInfo.versionName;
-            int versionCode = packageInfo.versionCode;
-
-            Locale locale = getResources().getConfiguration().getLocales().get(0);
-
-            TimeZone timeZone = TimeZone.getDefault();
-            String timeZoneId = timeZone.getID();
-
-            this.registerReceiver(this.batteryInfoReceiver, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
-            int screenWidth, screenHeight;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
-                WindowInsets insets = windowMetrics.getWindowInsets();
-
-                int insetsLeft = insets.getInsets(WindowInsets.Type.systemBars()).left;
-                int insetsRight = insets.getInsets(WindowInsets.Type.systemBars()).right;
-                int insetsTop = insets.getInsets(WindowInsets.Type.systemBars()).top;
-                int insetsBottom = insets.getInsets(WindowInsets.Type.systemBars()).bottom;
-                screenWidth = windowMetrics.getBounds().width() - insetsLeft - insetsRight;
-                screenHeight = windowMetrics.getBounds().height() - insetsTop - insetsBottom;
-            } else {
-                DisplayMetrics displayMetrics = new DisplayMetrics();
-                WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-                windowManager.getDefaultDisplay().getMetrics(displayMetrics);
-                screenWidth = displayMetrics.widthPixels;
-                screenHeight = displayMetrics.heightPixels;
-            }
-
-            int orientation = getResources().getConfiguration().orientation;
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                screenOrientation = getString(R.string.portrait);
-            } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                screenOrientation = getString(R.string.landscape);
-            }
-
-            String usedStorage = getReadableStorageSize(getTotalStorageSize(this, false));
-            String totalStorage = getReadableStorageSize(getTotalStorageSize(this, true));
-            String totalMemory = getReadableStorageSize(getAvailableMemory(this).totalMem);
-            //String availableMemory = getReadableStorageSize(getAvailableMemory().availMem);
-
-            ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-            List<ActivityManager.RunningAppProcessInfo> runningAppProcesses = activityManager.getRunningAppProcesses();
-            String appMemoryUsage = "";
-            for (ActivityManager.RunningAppProcessInfo processInfo : runningAppProcesses) {
-                if (processInfo.processName.equals(packageName)) {
-                    Debug.MemoryInfo[] memoryInfoArray =
-                            activityManager.getProcessMemoryInfo(new int[]{processInfo.pid});
-                    Debug.MemoryInfo memoryInfo = memoryInfoArray[0];
-                    int totalPss = memoryInfo.getTotalPss();
-                    appMemoryUsage = getReadableStorageSize((long) totalPss * 1024);
-                    break;
-                }
-            }
-
-            String libVersionName = BuildConfig.VERSION_NAME;
-            // String libVersionCode = BuildConfig.VERSION_CODE;
-
-            ConnectivityManager connectivityManager =
-                    (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            String networkState = "";
-            if (connectivityManager != null) {
-                NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-                networkState = Objects.requireNonNull(activeNetworkInfo).getTypeName();
-            }
-            deviceInfo = new DeviceInfo.Builder()
-                    .setDeviceModel(Build.BRAND + " " + Build.MODEL)
-                    .setDeviceOsVersion(Build.VERSION.RELEASE)
-                    .setDeviceBatteryLevel(batteryLevel + "%")
-                    .setDeviceScreenSize(screenWidth + "x" + screenHeight + " px")
-                    .setDeviceOrientation(screenOrientation)
-                    .setDeviceRegionCode(locale.getCountry())
-                    .setDeviceRegionName(locale.getDisplayCountry())
-                    .setTimezone(timeZoneId)
-                    .setBuildVersionNumber(String.valueOf(versionCode))
-                    .setReleaseVersionNumber(versionName)
-                    .setBundleIdentifier(packageName)
-                    .setAppName(appName)
-                    .setDeviceUsedStorage(usedStorage)
-                    .setDeviceTotalStorage(totalStorage)
-                    .setDeviceMemory(totalMemory)
-                    .setAppMemoryUsage(appMemoryUsage)
-                    .setAppsOnAirSDKVersion(libVersionName)
-                    .setNetworkState(networkState)
-                    .build();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        return String.valueOf(AppRemarkService.Properties.INSTANCE.getOptions().get(key));
     }
 
     private void openGallery() {
@@ -476,6 +337,7 @@ public class RemarkActivity extends AppCompatActivity {
                             RemarkFileInfo remarkFileInfo = new RemarkFileInfo.Builder()
                                     .setKey(fileUrl)
                                     .setFileType(imageData.getFileType())
+                                    .setFileSize(imageData.getFileSize())
                                     .build();
                             remarkFileInfoList.add(remarkFileInfo);
                             if (imageList.size() == remarkFileInfoList.size()) {
@@ -502,39 +364,37 @@ public class RemarkActivity extends AppCompatActivity {
 
         JSONObject jsonObject = new JSONObject();
         try {
+            Map<String, Object> additionalInfo = Collections.singletonMap("appRemarkVersion", BuildConfig.VERSION_NAME);
+            JSONObject deviceInfoWithAdditionalInfo = CoreService.getDeviceInfo(this, additionalInfo); // if you don't want to pass additionalInfo then just pass [Collections.emptyMap()]
+            JSONObject appInfo = deviceInfoWithAdditionalInfo.getJSONObject("appInfo");
+            JSONObject deviceInfo = deviceInfoWithAdditionalInfo.getJSONObject("deviceInfo");
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 
             JSONObject dataObject = new JSONObject();
-            if (!companion.getExtraPayload().isEmpty()) {
-                JSONObject metaDataObject = new JSONObject(companion.getExtraPayload());
+            if (!AppRemarkService.Properties.INSTANCE.getOptions().isEmpty()) {
+                JSONObject metaDataObject = new JSONObject(AppRemarkService.Properties.INSTANCE.getExtraPayload());
                 dataObject.put("additionalMetadata", metaDataObject);
             }
 
             dataObject.put("description", description);
             dataObject.put("type", RemarkTypeMapper.getType(remarkType));
 
-            Map<String, Object> mapData = new HashMap<>();
+            Map<String, Object> finalData = new HashMap<>();//For merging device info and app info
+            Iterator<String> appInfoKey = appInfo.keys();
+            while (appInfoKey.hasNext()) {
+                String key = appInfoKey.next();
+                Object value = appInfo.get(key);
+                finalData.put(key, value);
+            }
 
-            mapData.put("deviceModel", deviceInfo.getDeviceModel());
-            mapData.put("deviceUsedStorage", deviceInfo.getDeviceUsedStorage());
-            mapData.put("deviceTotalStorage", deviceInfo.getDeviceTotalStorage());
-            mapData.put("deviceMemory", deviceInfo.getDeviceMemory());
-            mapData.put("appMemoryUsage", deviceInfo.getAppMemoryUsage());
-            mapData.put("deviceOrientation", deviceInfo.getDeviceOrientation());
-            mapData.put("buildVersionNumber", deviceInfo.getBuildVersionNumber());
-            mapData.put("deviceOsVersion", deviceInfo.getDeviceOsVersion());
-            mapData.put("deviceRegionCode", deviceInfo.getDeviceRegionCode());
-            mapData.put("deviceBatteryLevel", batteryLevel + "%");
-            mapData.put("deviceScreenSize", deviceInfo.getDeviceScreenSize());
-            mapData.put("deviceRegionName", deviceInfo.getDeviceRegionName());
-            mapData.put("appName", deviceInfo.getAppName());
-            mapData.put("releaseVersionNumber", deviceInfo.getReleaseVersionNumber());
-            mapData.put("timezone", deviceInfo.getTimezone());
-            mapData.put("appsOnAirSDKVersion", deviceInfo.getAppsOnAirSDKVersion());
-            mapData.put("networkState", deviceInfo.getNetworkState());
-            mapData.put("bundleIdentifier", deviceInfo.getBundleIdentifier());
-            JSONObject deviceObject = new JSONObject(mapData);
+            Iterator<String> deviceInfoKey = deviceInfo.keys();
+            while (deviceInfoKey.hasNext()) {
+                String key = deviceInfoKey.next();
+                Object value = deviceInfo.get(key);
+                finalData.put(key, value);
+            }
+            JSONObject deviceObject = new JSONObject(finalData);
             dataObject.put("deviceInfo", deviceObject);
 
             if (!remarkFileInfoList.isEmpty()) {
@@ -604,6 +464,5 @@ public class RemarkActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(batteryInfoReceiver);
     }
 }
