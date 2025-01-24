@@ -55,6 +55,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -378,8 +380,22 @@ public class RemarkActivity extends AppCompatActivity {
             dataObject.put("description", description);
             dataObject.put("type", RemarkTypeMapper.getType(remarkType));
 
-            dataObject.put("deviceInfo", deviceInfo);
-            dataObject.put("appInfo", appInfo);
+            Map<String, Object> finalData = new HashMap<>();//For merging device info and app info
+            Iterator<String> appInfoKey = appInfo.keys();
+            while (appInfoKey.hasNext()) {
+                String key = appInfoKey.next();
+                Object value = appInfo.get(key);
+                finalData.put(key, value);
+            }
+
+            Iterator<String> deviceInfoKey = deviceInfo.keys();
+            while (deviceInfoKey.hasNext()) {
+                String key = deviceInfoKey.next();
+                Object value = deviceInfo.get(key);
+                finalData.put(key, value);
+            }
+            JSONObject deviceObject = new JSONObject(finalData);
+            dataObject.put("deviceInfo", deviceObject);
 
             if (!remarkFileInfoList.isEmpty()) {
                 Gson gson = new Gson();
