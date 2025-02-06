@@ -10,7 +10,7 @@ android {
     defaultConfig {
         minSdk 24
         versionCode 1
-        versionName "0.0.5"
+        versionName "0.0.6"
         android {
             buildConfigField 'String', 'BASE_URL', BASE_URL
             buildConfigField 'String', 'VERSION_CODE', VERSION_CODE
@@ -55,7 +55,6 @@ dependencies {
     implementation libs.powerspinner
     implementation libs.glide
     implementation libs.appsonair.android.core
-    implementation libs.gson
     annotationProcessor libs.compiler
     testImplementation libs.junit
     androidTestImplementation libs.androidx.junit
@@ -69,7 +68,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.appsonair'
                 artifactId = 'appremark'
-                version = '0.0.5'
+                version = '0.0.6'
             }
         }
         repositories {

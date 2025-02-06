@@ -45,7 +45,6 @@ import com.appsonair.core.services.CoreService;
 import com.appsonair.core.services.NetworkService;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.gson.Gson;
 import com.skydoves.powerspinner.OnSpinnerItemSelectedListener;
 import com.skydoves.powerspinner.PowerSpinnerView;
 import org.json.JSONArray;
@@ -398,9 +397,20 @@ public class RemarkActivity extends AppCompatActivity {
             dataObject.put("deviceInfo", deviceObject);
 
             if (!remarkFileInfoList.isEmpty()) {
-                Gson gson = new Gson();
-                String remarkFileList = gson.toJson(remarkFileInfoList);
-                JSONArray remarkFileListJsonArray = new JSONArray(remarkFileList);
+                JSONArray remarkFileListJsonArray = new JSONArray();
+                //Adding the images in images json
+                for (RemarkFileInfo remarkFileInfo : remarkFileInfoList) {
+                    try {
+                        JSONObject imageObject = new JSONObject();
+                        imageObject.put("key", remarkFileInfo.getKey());
+                        imageObject.put("fileType", remarkFileInfo.getFileType());
+                        imageObject.put("size", remarkFileInfo.getFileSize());
+                        remarkFileListJsonArray.put(imageObject);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+                // Assigning the images data to attachments
                 dataObject.put("attachments", remarkFileListJsonArray);
             }
 
