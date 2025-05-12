@@ -1,3 +1,7 @@
+## 0.0.7
+
+* Upgrade dependency and added additional deviceInfo
+
 ## 0.0.6
 
 * Remove gson dependency for the pro-guard fix.
