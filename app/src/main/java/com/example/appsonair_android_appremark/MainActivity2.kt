@@ -41,13 +41,14 @@ class MainActivity2 : ComponentActivity() {
                             ),
                             onClick = {
                                 //with extra payload
+                                AppRemarkService.setAdditionalMetaData( mapOf(
+                                    "title" to "Initial Test Demo addRemark",
+                                    "isFromIndia" to false
+                                ))
                                 AppRemarkService.addRemark(
                                     this@MainActivity2,
                                     //pass your customized payload, which you want to save in order to monitor your app
-                                    extraPayload = mapOf(
-                                        "title" to "Initial Demo",
-                                        "isFromIndia" to true
-                                    )
+
                                 )
 
                                 //without extra payload
