@@ -376,7 +376,7 @@ public class RemarkActivity extends AppCompatActivity {
             deviceInfo.put("installVendor",AdditionalDeviceInfo.Companion.getInstallVendor(this));
             deviceInfo.put("biometricInfo",AdditionalDeviceInfo.Companion.getBiometricStatus(this));
             String uniqueIdentifier = AdditionalDeviceInfo.Companion.getUniqueIdentifier(this)+ deviceInfo.getString("firstInstallTime");
-            deviceInfo.put("uniqueIdentifier",uniqueIdentifier.replaceAll("[^a-zA-Z0-9]", ""));
+            deviceInfo.put("externalReferenceId",uniqueIdentifier.replaceAll("[^a-zA-Z0-9]", ""));
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 
