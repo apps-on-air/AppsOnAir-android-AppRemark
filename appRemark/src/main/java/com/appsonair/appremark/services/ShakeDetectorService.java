@@ -53,7 +53,7 @@ public class ShakeDetectorService {
                 mAccelCurrent = (float) Math.sqrt(x * x + y * y + z * z);
                 float delta = mAccelCurrent - mAccelLast;
                 mAccel = mAccel * 0.9f + delta;
-                if (mAccel > 30 && !isProcessing) {
+                if (mAccel > 20 && !isProcessing) {
                     
                     isProcessing = true;
                     try {
