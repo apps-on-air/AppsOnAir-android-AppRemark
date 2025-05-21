@@ -39,6 +39,7 @@ import com.appsonair.appremark.interfaces.OnItemClickListener;
 import com.appsonair.appremark.models.ImageData;
 import com.appsonair.appremark.models.RemarkFileInfo;
 import com.appsonair.appremark.services.AppRemarkService;
+import com.appsonair.appremark.utils.AdditionalDeviceInfo;
 import com.appsonair.appremark.utils.ApiUtils;
 import com.appsonair.appremark.utils.RemarkTypeMapper;
 import com.appsonair.core.services.CoreService;
@@ -57,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import okhttp3.Call;
@@ -367,6 +369,14 @@ public class RemarkActivity extends AppCompatActivity {
             JSONObject deviceInfoWithAdditionalInfo = CoreService.getDeviceInfo(this, additionalInfo); // if you don't want to pass additionalInfo then just pass [Collections.emptyMap()]
             JSONObject appInfo = deviceInfoWithAdditionalInfo.getJSONObject("appInfo");
             JSONObject deviceInfo = deviceInfoWithAdditionalInfo.getJSONObject("deviceInfo");
+            deviceInfo.put("themeMode", AdditionalDeviceInfo.Companion.getThemeMode(this));
+            deviceInfo.put("app_permissions",AdditionalDeviceInfo.Companion.getPermissionsStatusList(this));
+            deviceInfo.put("locale", Locale.getDefault().toString());
+            deviceInfo.put("fontScale", AdditionalDeviceInfo.Companion.getFontScale(this));
+            deviceInfo.put("installVendor",AdditionalDeviceInfo.Companion.getInstallVendor(this));
+            deviceInfo.put("biometricInfo",AdditionalDeviceInfo.Companion.getBiometricStatus(this));
+            String uniqueIdentifier = AdditionalDeviceInfo.Companion.getUniqueIdentifier(this)+ deviceInfo.getString("firstInstallTime");
+            deviceInfo.put("externalReferenceId",uniqueIdentifier.replaceAll("[^a-zA-Z0-9]", ""));
             JSONObject whereObject = new JSONObject();
             whereObject.put("appId", appId);
 

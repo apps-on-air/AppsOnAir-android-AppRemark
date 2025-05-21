@@ -71,6 +71,7 @@ class AppRemarkService {
 
         private var shakeGestureEnable: Boolean = true
         private var extraPayload: Map<String, Any> = emptyMap()
+
         private var options: Map<String, Any> = OPTIONS.mapKeys {it.key.lowercase()}.toMutableMap()
 
         private fun isValidColorHex(colorHex: String): Boolean {
@@ -165,12 +166,17 @@ class AppRemarkService {
         }
 
         @JvmStatic
+        fun setAdditionalMetaData(
+          extraPayload: Map<String, Any>
+        ) {
+             Companion.extraPayload = extraPayload
+        }
+
+        @JvmStatic
         @JvmOverloads
         fun addRemark(
-            context: Context,
-            extraPayload: Map<String, Any> = emptyMap(),
+            context: Context
         ) {
-            Companion.extraPayload = extraPayload
             ShakeDetectorService.addRemarkManually(context)
         }
     }
