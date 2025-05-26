@@ -1,3 +1,10 @@
+## 0.0.7
+**Breaking Changes:**
+* Upgrade dependency
+* Added additional device information (theme, permissions, locale, etc.).
+* Remove `extraPayload` params in `addRemark()` methods and create separate `setAdditionalMetaData()` method for adding/updating the additional details.
+
+
 ## 0.0.6
 
 * Remove gson dependency for the pro-guard fix.

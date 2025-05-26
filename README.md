@@ -151,11 +151,8 @@ Follow this step to send your customize payload, which you want to save in order
 Users have to pass "extraPayload" inform of Map, which contains key-value pair of user's additional meta-data.
 
 ```sh
-AppRemarkService.addRemark(
-    this,
-    extraPayload = mapOf(
-        "title" to "Initial Demo",
-        "isFromIndia" to true
-    )
-)
+   AppRemarkService.setAdditionalMetaData( mapOf(
+    "userId" to "********",
+    "userEmail" to "test@gmail.com"))
 ```
+Note: Call the setAdditionalMetaData method whenever you want to add or update details
