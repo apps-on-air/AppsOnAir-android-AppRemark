@@ -371,7 +371,7 @@ public class RemarkActivity extends AppCompatActivity {
             JSONObject deviceInfo = deviceInfoWithAdditionalInfo.getJSONObject("deviceInfo");
             deviceInfo.put("themeMode", AdditionalDeviceInfo.Companion.getThemeMode(this));
             deviceInfo.put("app_permissions",AdditionalDeviceInfo.Companion.getPermissionsStatusList(this));
-            deviceInfo.put("locale", Locale.getDefault().toString());
+            deviceInfo.put("locale", AdditionalDeviceInfo.Companion.getLocale(this));
             deviceInfo.put("fontScale", AdditionalDeviceInfo.Companion.getFontScale(this));
             deviceInfo.put("installVendor",AdditionalDeviceInfo.Companion.getInstallVendor(this));
             deviceInfo.put("biometricInfo",AdditionalDeviceInfo.Companion.getBiometricStatus(this));
