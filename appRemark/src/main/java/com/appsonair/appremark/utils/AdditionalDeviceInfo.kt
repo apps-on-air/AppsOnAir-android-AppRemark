@@ -11,10 +11,22 @@ import androidx.activity.ComponentActivity
 import androidx.biometric.BiometricManager
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.util.Locale
 
 internal class AdditionalDeviceInfo {
 
      companion object {
+
+         fun getLocale(context: Context):String{
+             val localeList =
+                 context.resources.configuration.locales
+
+             val primaryLocale = localeList[0] // First preferred locale
+             val languageCode = primaryLocale.language
+             val regionCode = primaryLocale.country
+
+             return "${languageCode}_${regionCode}"
+         }
 
          fun getThemeMode(context: Context): String {
             val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
