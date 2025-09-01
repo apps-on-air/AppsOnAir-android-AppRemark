@@ -1,11 +1,15 @@
+## 1.1.0
+
+* Dependency upgrade
+
 ## 0.0.8
 
-* Upgrade dependency
+* Dependency upgrade
 * Minor improvement
 
 ## 0.0.7
 **Breaking Changes:**
-* Upgrade dependency
+* Dependency upgrade
 * Added additional device information (theme, permissions, locale, etc.).
 * Remove `extraPayload` params in `addRemark()` methods and create separate `setAdditionalMetaData()` method for adding/updating the additional details.
 

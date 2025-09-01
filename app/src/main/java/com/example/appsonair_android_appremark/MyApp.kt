@@ -11,7 +11,7 @@ class MyApp : Application() {
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-             if (!metaDataSet){
+
                  val options = mutableMapOf(
                      "pageBackGroundColor" to "#007AFF",
                      "appBarBackGroundColor" to "#1c1c9e",
@@ -38,10 +38,10 @@ class MyApp : Application() {
                      shakeGestureEnable = true,
                      options = options
                  )
-
+                if (!metaDataSet){
                  AppRemarkService.setAdditionalMetaData( mapOf(
-                     "title" to "Initial Test Demo",
-                     "isFromIndia" to true
+                     "userId" to "USER_ID",
+                     "isShake" to true
                  ))
                  metaDataSet = true
              }
