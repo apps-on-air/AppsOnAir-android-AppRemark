@@ -1,5 +1,8 @@
 # AppsOnAir-android-AppRemark
 
+## ⚠️ Important Notice ⚠️
+
+The plugin is fully functional and integrates with our **AppRemark** service, which is currently in public beta. While you can start using it today, please note that there may be minor changes or improvements as we prepare for full production launch.
 
 ## How it works? 
 
@@ -10,6 +13,8 @@ AppsOnAir offers a service to monitor your problems or app recommendations/impro
 When you shake the device, it automatically takes screenshots of your apps. By modifying those app screenshots, users can draw attention to the specific problems or any app suggestions for enhancements.
 
 Users have the option to turn off shakeGesture. They can also manually open the "Add Remark" screen.
+
+#### To learn more about AppsOnAir AppRemark, please visit the [AppsOnAir](https://documentation.appsonair.com) website
 
 
 ## How to use?
