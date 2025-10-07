@@ -1,3 +1,7 @@
+## 1.1.2
+
+* Fix UI overlay issue for react-native-sdk
+
 ## 1.1.1
 
 * Dependency upgrade
