@@ -18,11 +18,11 @@
         <activity
             android:name=".activities.RemarkActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+            android:theme="@style/AppRemarkTheme" />
         <activity
             android:name=".activities.EditImageActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/AppRemarkTheme">
             <intent-filter
                 android:label="@string/app_intent_name"
                 android:scheme="file"
