@@ -1,3 +1,5 @@
 <resources>
-
+<style name="AppRemarkTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <item name="android:windowContentOverlay">@null</item>
+</style>
 </resources>
