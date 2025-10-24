@@ -3,7 +3,10 @@ package com.example.appsonair_android_appremark
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
+import com.appsonair.appremark.interfaces.RemarkResponse
 import com.appsonair.appremark.services.AppRemarkService
+import org.json.JSONObject
 
 class MyApp : Application() {
     private var metaDataSet = false
@@ -36,7 +39,12 @@ class MyApp : Application() {
                  AppRemarkService.initialize(
                      activity,
                      shakeGestureEnable = true,
-                     options = options
+                     options = options,
+                     object : RemarkResponse {
+                         override fun onRemarkResponse(result: JSONObject) {
+                          Log.d("AppRemark", result.toString())
+                         }
+                     }
                  )
                 if (!metaDataSet){
                  AppRemarkService.setAdditionalMetaData( mapOf(
