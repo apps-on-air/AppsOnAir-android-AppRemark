@@ -289,6 +289,7 @@ public class RemarkActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
+                    addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                     hideProgressbar();
                 }
 
@@ -306,12 +307,13 @@ public class RemarkActivity extends AppCompatActivity {
                             }
                         } else {
                             JSONObject jsonObject = new JSONObject(response.body().string());
-                            String errorMessage = jsonObject.optString("message", String.valueOf(R.string.something_wrong));
+                            String errorMessage = jsonObject.optString("message", getString(R.string.something_wrong));
                             addMessageToListener(AppRemarkStatus.FAILURE,errorMessage);
                             hideProgressbar();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
                         hideProgressbar();
                     }
@@ -350,7 +352,7 @@ public class RemarkActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
-                    addMessageToListener(AppRemarkStatus.FAILURE, String.valueOf(R.string.something_wrong));
+                    addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                     hideProgressbar();
                 }
 
@@ -488,6 +490,7 @@ public class RemarkActivity extends AppCompatActivity {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
                     }
                 });
