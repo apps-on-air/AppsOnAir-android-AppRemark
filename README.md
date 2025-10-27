@@ -63,7 +63,7 @@ dependencyResolutionManagement {
 
 Add the following code on your application. It is necessary to add below code in the activity lifecycle as we need to capture the current Activity screen.
 
-```sh
+```kotlin
 class MyApp : Application() {
 
    override fun onCreate() {
@@ -97,7 +97,7 @@ class MyApp : Application() {
 
 Follow this step to add App Remarks using shakeGesture with the default theme of "Add Remark" screen.
 
-```sh
+```kotlin
 AppRemarkService.initialize(activity)
 ```
 
@@ -127,7 +127,7 @@ Users have to pass given keys into "options". Using "options", this SDK will set
 | `inputTextColor`        | `String` | `"#000000"`               | Set textfield input text color |
 
 
-```sh
+```kotlin
 val options = mutableMapOf("pageBackgroundColor" to "#FFFFC5")
 
 AppRemarkService.initialize(
@@ -138,16 +138,22 @@ AppRemarkService.initialize(
 
 "shakeGestureEnable" is set to true by default, allowing the device to capture your current screen when it shakes. If it is false, the device shake's auto-capture screen will be disabled.
 
-```sh
+```kotlin
 AppRemarkService.initialize(
     activity,
-    shakeGestureEnable = false
+    shakeGestureEnable = true,
+    options = options,
+    object : RemarkResponse {
+        override fun onRemarkResponse(result: JSONObject) {
+        Log.d("AppRemark", result.toString())
+        }
+    }
 )
 ```
 
 Follow this step to open AppRemark screen manually,
 
-```sh
+```kotlin
 AppRemarkService.addRemark(this)
 ```
 
@@ -155,7 +161,7 @@ Follow this step to send your customize payload, which you want to save in order
 
 Users have to pass "extraPayload" inform of Map, which contains key-value pair of user's additional meta-data.
 
-```sh
+```kotlin
    AppRemarkService.setAdditionalMetaData( mapOf(
     "userId" to "********",
     "userEmail" to "test@gmail.com"))
