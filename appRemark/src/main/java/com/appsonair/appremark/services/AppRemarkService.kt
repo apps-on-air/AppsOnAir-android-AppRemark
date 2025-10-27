@@ -5,7 +5,6 @@ import com.appsonair.appremark.R
 import com.appsonair.core.services.CoreService
 import android.util.Log
 import android.content.Context
-import com.appsonair.appremark.interfaces.RemarkResponse
 import org.json.JSONObject
 
 class AppRemarkService {
@@ -71,7 +70,7 @@ class AppRemarkService {
             Properties.inputTextColor to INPUT_TEXT_COLOR
         )
 
-        private lateinit var remarkListener: RemarkResponse
+        private lateinit var remarkListener: (JSONObject) -> Unit
         private var shakeGestureEnable: Boolean = true
         private var extraPayload: Map<String, Any> = emptyMap()
 
@@ -120,7 +119,7 @@ class AppRemarkService {
             context: Context,
             shakeGestureEnable: Boolean = true,
             options: Map<String, Any> = OPTIONS.toMutableMap(),
-            onRemarkResponse: RemarkResponse
+            onRemarkResponse: (JSONObject) -> Unit
         ) {
             this.remarkListener = onRemarkResponse
             val appId = CoreService.getAppId(context)
@@ -181,7 +180,7 @@ class AppRemarkService {
        internal  fun setRemarkResponse(
             data: JSONObject
         ) {
-           this.remarkListener.onRemarkResponse(data)
+           this.remarkListener.invoke(data)
         }
 
         @JvmStatic

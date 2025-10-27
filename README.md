@@ -142,13 +142,10 @@ AppRemarkService.initialize(
 AppRemarkService.initialize(
     activity,
     shakeGestureEnable = true,
-    options = options,
-    object : RemarkResponse {
-        override fun onRemarkResponse(result: JSONObject) {
-        Log.d("AppRemark", result.toString())
-        }
-    }
-)
+    options = options
+) { result ->
+    Log.d("AppRemark", result.toString())
+}
 ```
 
 Follow this step to open AppRemark screen manually,

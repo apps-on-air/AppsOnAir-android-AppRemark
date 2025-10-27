@@ -39,13 +39,10 @@ class MyApp : Application() {
                  AppRemarkService.initialize(
                      activity,
                      shakeGestureEnable = true,
-                     options = options,
-                     object : RemarkResponse {
-                         override fun onRemarkResponse(result: JSONObject) {
-                          Log.d("AppRemark", result.toString())
-                         }
-                     }
-                 )
+                     options = options
+                 ) { result ->
+                     Log.d("AppRemark", result.toString())
+                 }
                 if (!metaDataSet){
                  AppRemarkService.setAdditionalMetaData( mapOf(
                      "userId" to "USER_ID",
