@@ -4,9 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
-import com.appsonair.appremark.interfaces.RemarkResponse
 import com.appsonair.appremark.services.AppRemarkService
-import org.json.JSONObject
 
 class MyApp : Application() {
     private var metaDataSet = false

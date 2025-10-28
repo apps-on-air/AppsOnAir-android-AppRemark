@@ -1,6 +1,6 @@
 ## 1.1.3
 
-* Introduced a feedback listener to process success and failure responses.
+* Introduced `onRemarkResponse` feedback listener in `initialize` method to process success and failure responses.
 
 ## 1.1.2
 

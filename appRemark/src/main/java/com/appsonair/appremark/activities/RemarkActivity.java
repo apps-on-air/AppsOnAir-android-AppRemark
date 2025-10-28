@@ -463,7 +463,8 @@ public class RemarkActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d("Failure : ", String.valueOf(e));
-                runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
+                hideProgressbar();
             }
 
             @Override
@@ -491,6 +492,7 @@ public class RemarkActivity extends AppCompatActivity {
                     } catch (Exception e) {
                         e.printStackTrace();
                         addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
+                        hideProgressbar();
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
                     }
                 });
