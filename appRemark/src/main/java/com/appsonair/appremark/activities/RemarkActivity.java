@@ -463,6 +463,7 @@ public class RemarkActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d("Failure : ", String.valueOf(e));
+                remarkFileInfoList.clear();//Clear the list in failure case
                 addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                 hideProgressbar();
             }
@@ -488,12 +489,14 @@ public class RemarkActivity extends AppCompatActivity {
                             String errorMessage = errorJsonObject.optString("message", String.valueOf(R.string.something_wrong));
                             addMessageToListener(AppRemarkStatus.FAILURE, errorMessage);
                             Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+                            remarkFileInfoList.clear();//Clear the list in failure case
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                         addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                         hideProgressbar();
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
+                        remarkFileInfoList.clear();//Clear the list in failure case
                     }
                 });
             }
