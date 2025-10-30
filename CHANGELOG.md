@@ -1,3 +1,7 @@
+## 1.1.3
+
+* Introduced `onRemarkResponse` feedback listener in `initialize` method to process success and failure responses.
+
 ## 1.1.2
 
 * Fix UI overlay issue for react-native-sdk

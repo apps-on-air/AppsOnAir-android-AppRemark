@@ -3,6 +3,7 @@ package com.example.appsonair_android_appremark
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
+import android.util.Log
 import com.appsonair.appremark.services.AppRemarkService
 
 class MyApp : Application() {
@@ -37,7 +38,9 @@ class MyApp : Application() {
                      activity,
                      shakeGestureEnable = true,
                      options = options
-                 )
+                 ) { result ->
+                     Log.d("AppRemark", result.toString())
+                 }
                 if (!metaDataSet){
                  AppRemarkService.setAdditionalMetaData( mapOf(
                      "userId" to "USER_ID",
