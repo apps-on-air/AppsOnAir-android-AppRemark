@@ -35,12 +35,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.appsonair.appremark.BuildConfig;
 import com.appsonair.appremark.R;
 import com.appsonair.appremark.adapters.ImageAdapter;
+import com.appsonair.appremark.enums.AppRemarkStatus;
 import com.appsonair.appremark.interfaces.OnItemClickListener;
 import com.appsonair.appremark.models.ImageData;
 import com.appsonair.appremark.models.RemarkFileInfo;
+import com.appsonair.appremark.services.AppRemarkListener;
 import com.appsonair.appremark.services.AppRemarkService;
 import com.appsonair.appremark.utils.AdditionalDeviceInfo;
 import com.appsonair.appremark.utils.ApiUtils;
+import com.appsonair.appremark.utils.FileUtils;
 import com.appsonair.appremark.utils.RemarkTypeMapper;
 import com.appsonair.core.services.CoreService;
 import com.appsonair.core.services.NetworkService;
@@ -202,6 +205,7 @@ public class RemarkActivity extends AppCompatActivity {
                 etDescription.setError(null);
                 if (hasNetwork) {
                     if (progressBar.getVisibility() == View.GONE) {
+                        remarkFileInfoList.clear();//Clear the list initially
                         appId = CoreService.getAppId(this);
                         if (appId.isEmpty()) {
                             Log.d(TAG, "AppId: " + getString(R.string.error_something_wrong));
@@ -209,7 +213,7 @@ public class RemarkActivity extends AppCompatActivity {
                             Log.d(TAG, "AppId: " + appId);
                             progressBar.setVisibility(View.VISIBLE);
                             if (!imageList.isEmpty()) {
-                                getUploadImageURL();
+                                getUploadImageURL(appId);
                             } else {
                                 submitRemark(appId, description);
                             }
@@ -257,7 +261,7 @@ public class RemarkActivity extends AppCompatActivity {
         return Color.parseColor(color);
     }
 
-    public void getUploadImageURL() {
+    public void getUploadImageURL( String appId) {
         final String signedApiURL = BuildConfig.BASE_URL + ApiUtils.getSignedUrl;
         for (int i = 0; i < imageList.size(); i++) {
             ImageData imageData = imageList.get(i);
@@ -270,6 +274,9 @@ public class RemarkActivity extends AppCompatActivity {
             try {
                 fileObject.put("fileName", imageData.getFileName());
                 fileObject.put("fileType", imageData.getFileType());
+                fileObject.put("appId", appId);
+                fileObject.put("fileSize", FileUtils
+                        .convertMBToBytes(imageData.getFileSize()) );
                 dataObject.put("data", fileObject);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -283,6 +290,7 @@ public class RemarkActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
+                    addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                     hideProgressbar();
                 }
 
@@ -298,14 +306,31 @@ public class RemarkActivity extends AppCompatActivity {
                                 String signedURL = dataObject.getString("signedURL");
                                 uploadImage(signedURL, fileUrl, imageData);
                             }
+                        } else {
+                            JSONObject jsonObject = new JSONObject(response.body().string());
+                            String errorMessage = jsonObject.optString("message", getString(R.string.something_wrong));
+                            addMessageToListener(AppRemarkStatus.FAILURE,errorMessage);
+                            hideProgressbar();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
                         hideProgressbar();
                     }
                 }
             });
+        }
+    }
+
+    public void addMessageToListener(AppRemarkStatus status, String message){
+        try {
+            JSONObject statusJsonObject = new JSONObject();
+            statusJsonObject.put("message", message );
+            statusJsonObject.put("status", status.name());
+            AppRemarkListener.Companion.setRemarkResponse(statusJsonObject);
+        } catch (JSONException e) {
+            Log.d("AppRemark",e.toString());
         }
     }
 
@@ -328,6 +353,7 @@ public class RemarkActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
                     Log.d("Failure : ", String.valueOf(e));
+                    addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
                     hideProgressbar();
                 }
 
@@ -438,7 +464,8 @@ public class RemarkActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Log.d("Failure : ", String.valueOf(e));
-                runOnUiThread(() -> progressBar.setVisibility(View.GONE));
+                addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
+                hideProgressbar();
             }
 
             @Override
@@ -455,12 +482,18 @@ public class RemarkActivity extends AppCompatActivity {
                             }
                             String successMessage = message.isEmpty() ? getString(R.string.remark_added_successfully) : message;
                             Toast.makeText(RemarkActivity.this, successMessage, Toast.LENGTH_LONG).show();
+                            addMessageToListener(AppRemarkStatus.SUCCESS, successMessage);
                             finish();
                         } else {
+                            JSONObject errorJsonObject = new JSONObject(response.body().string());
+                            String errorMessage = errorJsonObject.optString("message", String.valueOf(R.string.something_wrong));
+                            addMessageToListener(AppRemarkStatus.FAILURE, errorMessage);
                             Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
+                        addMessageToListener(AppRemarkStatus.FAILURE, getString(R.string.something_wrong));
+                        hideProgressbar();
                         Log.d("Failure : ", String.valueOf(e.getMessage()));
                     }
                 });
@@ -469,8 +502,10 @@ public class RemarkActivity extends AppCompatActivity {
     }
 
     private void hideProgressbar() {
-        progressBar.setVisibility(View.GONE);
-        Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+        runOnUiThread(() -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(RemarkActivity.this, R.string.something_wrong, Toast.LENGTH_LONG).show();
+        });
     }
 
     /**

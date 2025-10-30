@@ -87,6 +87,10 @@ public class FileUtils {
         return mimeType;
     }
 
+    public static long convertMBToBytes(double sizeInMB) {
+        return (long) (sizeInMB * 1024 * 1024);
+    }
+
     public static File getFileFromUri(Context context, Uri uri) {
         File file = null;
         if (uri.getScheme().equals("file")) {
