@@ -90,6 +90,10 @@ public class RemarkActivity extends AppCompatActivity {
         setContentView(R.layout.activity_remark);
         NetworkService.checkConnectivity(this, isAvailable -> hasNetwork = isAvailable);
 
+        // Set status bar (dark)
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        );
         //init views
         LinearLayout linearLayout = findViewById(R.id.ll_main);
         LinearLayout llAppbar = findViewById(R.id.ll_appbar);
