@@ -2,6 +2,7 @@ package com.appsonair.appremark.services
 
 import android.graphics.Color
 import com.appsonair.appremark.R
+import com.appsonair.appremark.enums.ShakeSensitivity
 import com.appsonair.core.services.CoreService
 import android.util.Log
 import android.content.Context
@@ -119,6 +120,7 @@ class AppRemarkService {
             context: Context,
             shakeGestureEnable: Boolean = true,
             options: Map<String, Any> = OPTIONS.toMutableMap(),
+            shakeSensitivity: ShakeSensitivity = ShakeSensitivity.MEDIUM,
             onRemarkResponse: (JSONObject) -> Unit
         ) {
             this.remarkListener = onRemarkResponse
@@ -164,7 +166,7 @@ class AppRemarkService {
                 Companion.options = mutableMap.mapKeys {it.key.lowercase()}.toMutableMap()
                 Companion.shakeGestureEnable = shakeGestureEnable
                 if (Companion.shakeGestureEnable) {
-                    ShakeDetectorService.shakeDetect(context)
+                    ShakeDetectorService.shakeDetect(context, shakeSensitivity.threshold)
                 }
             }
         }

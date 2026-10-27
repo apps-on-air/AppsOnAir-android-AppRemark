@@ -21,6 +21,7 @@ import android.view.View;
 import com.appsonair.appremark.R;
 import com.appsonair.appremark.activities.EditImageActivity;
 import com.appsonair.appremark.activities.RemarkActivity;
+import com.appsonair.appremark.enums.ShakeSensitivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,7 +39,12 @@ public class ShakeDetectorService {
     private static SensorEventListener msSensorEventListener;
     private static float mAccel, mAccelCurrent, mAccelLast;
 
+    // kept so callers of the signature without sensitivity keep working
     public static void shakeDetect(Context context) {
+        shakeDetect(context, ShakeSensitivity.MEDIUM.threshold);
+    }
+
+    public static void shakeDetect(Context context, float threshold) {
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(msSensorEventListener);
         }
@@ -53,7 +59,7 @@ public class ShakeDetectorService {
                 mAccelCurrent = (float) Math.sqrt(x * x + y * y + z * z);
                 float delta = mAccelCurrent - mAccelLast;
                 mAccel = mAccel * 0.9f + delta;
-                if (mAccel > 20 && !isProcessing) {
+                if (mAccel > threshold && !isProcessing) {
                     
                     isProcessing = true;
                     try {
