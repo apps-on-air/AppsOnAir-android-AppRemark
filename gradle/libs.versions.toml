@@ -18,6 +18,9 @@ activityCompose = "1.6.0"
 appcompat = "1.4.1"
 material = "1.5.0"
 powerspinner = "1.2.7"
+robolectric = "4.14.1"
+mockk = "1.13.2"
+androidxTestCore = "1.5.0"
 
 [libraries]
 android-maven-gradle-plugin = { module = "com.github.dcendents:android-maven-gradle-plugin", version.ref = "androidMavenGradlePlugin" }
@@ -31,6 +34,10 @@ glide = { module = "com.github.bumptech.glide:glide", version = "4.14.2" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 gradle-nexus-staging-plugin = { module = "io.codearte.gradle.nexus:gradle-nexus-staging-plugin", version.ref = "gradleNexusStagingPlugin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version = "4.9.1" }
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidxTestCore" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
