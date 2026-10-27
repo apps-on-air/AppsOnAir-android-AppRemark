@@ -148,6 +148,27 @@ AppRemarkService.initialize(
 }
 ```
 
+"shakeSensitivity" controls how hard the device must be shaken to capture the screen. It is set to `ShakeSensitivity.MEDIUM` by default.
+
+| Value       | Description                                                  |
+|:------------|:-------------------------------------------------------------|
+| `VERY_LOW`  | Needs a very hard, deliberate shake                          |
+| `LOW`       | Needs a firm shake, useful for apps used on the move         |
+| `MEDIUM`    | Default                                                      |
+| `HIGH`      | Triggers on a light shake                                    |
+| `VERY_HIGH` | Triggers on a very light shake, useful for testers           |
+
+```kotlin
+AppRemarkService.initialize(
+    activity,
+    shakeGestureEnable = true,
+    options = options,
+    shakeSensitivity = ShakeSensitivity.HIGH
+) { result ->
+    Log.d("AppRemark", result.toString())
+}
+```
+
 Follow this step to open AppRemark screen manually,
 
 ```kotlin
