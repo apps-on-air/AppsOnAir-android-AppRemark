@@ -4,43 +4,22 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import android.util.Log
+import com.appsonair.appremark.enums.ShakeSensitivity
 import com.appsonair.appremark.services.AppRemarkService
 
 class MyApp : Application() {
     private var metaDataSet = false
+
+    companion object {
+        //selected from the dropdown in MainActivity and used on every initialize
+        var shakeSensitivity = ShakeSensitivity.MEDIUM
+    }
+
     override fun onCreate() {
         super.onCreate()
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-
-                 val options = mutableMapOf(
-                     "pageBackGroundColor" to "#007AFF",
-                     "appBarBackGroundColor" to "#1c1c9e",
-                     "descriptionLabelText" to "Add description here",
-                     "appBarTitleColor" to "#FFFFFF",
-                     "remarkTypeLabelText" to "Add Remark here",
-                     "descriptionHintText" to "Add description here..",
-                     "descriptionMaxLength" to "120",
-                     "buttonText" to "Submit Remark",
-                     "buttonTextColor" to "#000000",
-                     "labelColor" to "#FFFFFF",
-                     "buttonBackgroundColor" to "#FFFFFF",
-                     "inputTextColor" to "#000000",
-                     "hintColor" to "#000000",
-                     "appBarTitleText" to "Feedback Screen"
-                 )
-
-                 //with default theme
-                 //AppRemarkService.initialize(activity)
-                 //with customize theme
-                 //shakeGestureEnable is set to true by default, allowing the device to capture your current screen when it shakes. If it is false, the device shake's auto-capture screen will be disabled.
-                 AppRemarkService.initialize(
-                     activity,
-                     shakeGestureEnable = true,
-                     options = options
-                 ) { result ->
-                     Log.d("AppRemark", result.toString())
-                 }
+                initAppRemark(activity)
                 if (!metaDataSet){
                  AppRemarkService.setAdditionalMetaData( mapOf(
                      "userId" to "USER_ID",
@@ -70,6 +49,40 @@ class MyApp : Application() {
             override fun onActivityDestroyed(activity: Activity) {
             }
         })
+    }
+
+    //calling initialize again with the same activity applies a new shakeSensitivity right away
+    fun initAppRemark(activity: Activity) {
+        val options = mutableMapOf(
+            "pageBackGroundColor" to "#007AFF",
+            "appBarBackGroundColor" to "#1c1c9e",
+            "descriptionLabelText" to "Add description here",
+            "appBarTitleColor" to "#FFFFFF",
+            "remarkTypeLabelText" to "Add Remark here",
+            "descriptionHintText" to "Add description here..",
+            "descriptionMaxLength" to "120",
+            "buttonText" to "Submit Remark",
+            "buttonTextColor" to "#000000",
+            "labelColor" to "#FFFFFF",
+            "buttonBackgroundColor" to "#FFFFFF",
+            "inputTextColor" to "#000000",
+            "hintColor" to "#000000",
+            "appBarTitleText" to "Feedback Screen"
+        )
+
+        //with default theme
+        //AppRemarkService.initialize(activity)
+        //with customize theme
+        //shakeGestureEnable is set to true by default, allowing the device to capture your current screen when it shakes. If it is false, the device shake's auto-capture screen will be disabled.
+        //shakeSensitivity is set to MEDIUM by default. Use VERY_LOW/LOW to require a harder shake or HIGH/VERY_HIGH to trigger on a lighter one.
+        AppRemarkService.initialize(
+            activity,
+            shakeGestureEnable = true,
+            options = options,
+            shakeSensitivity = shakeSensitivity
+        ) { result ->
+            Log.d("AppRemark", result.toString())
+        }
     }
 }
 

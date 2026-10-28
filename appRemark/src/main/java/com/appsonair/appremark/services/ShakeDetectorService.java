@@ -21,6 +21,7 @@ import android.view.View;
 import com.appsonair.appremark.R;
 import com.appsonair.appremark.activities.EditImageActivity;
 import com.appsonair.appremark.activities.RemarkActivity;
+import com.appsonair.appremark.enums.ShakeSensitivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -37,8 +38,18 @@ public class ShakeDetectorService {
     private static SensorManager mSensorManager;
     private static SensorEventListener msSensorEventListener;
     private static float mAccel, mAccelCurrent, mAccelLast;
+    // a shake keeps the device moving, putting it down (even on a sofa that bounces) settles within ~0.3s
+    private static final float STILL_TOLERANCE = 3f;
+    private static final long CONFIRM_FROM_MS = 350;
+    private static final long CONFIRM_UNTIL_MS = 800;
+    private static long mJoltTimestamp;
 
+    // kept so callers of the signature without sensitivity keep working
     public static void shakeDetect(Context context) {
+        shakeDetect(context, ShakeSensitivity.MEDIUM.threshold);
+    }
+
+    public static void shakeDetect(Context context, float threshold) {
         if (mSensorManager != null) {
             mSensorManager.unregisterListener(msSensorEventListener);
         }
@@ -53,14 +64,26 @@ public class ShakeDetectorService {
                 mAccelCurrent = (float) Math.sqrt(x * x + y * y + z * z);
                 float delta = mAccelCurrent - mAccelLast;
                 mAccel = mAccel * 0.9f + delta;
-                if (mAccel > 20 && !isProcessing) {
-                    
-                    isProcessing = true;
-                    try {
-                        captureScreen(context);
-                    } catch (Exception e) {
-                        isProcessing = false;
+                if (mJoltTimestamp != 0) {
+                    long elapsedMs = (sensorEvent.timestamp - mJoltTimestamp) / 1_000_000;
+                    float deviation = Math.abs(mAccelCurrent - SensorManager.GRAVITY_EARTH);
+                    if (elapsedMs > CONFIRM_UNTIL_MS) {
+                        // device settled, it was put down and not shaken
+                        mJoltTimestamp = 0;
+                    } else if (elapsedMs >= CONFIRM_FROM_MS && deviation > STILL_TOLERANCE) {
+                        mJoltTimestamp = 0;
+                        if (!isProcessing) {
+                            isProcessing = true;
+                            try {
+                                captureScreen(context);
+                            } catch (Exception e) {
+                                isProcessing = false;
+                            }
+                        }
                     }
+                } else if (mAccel > threshold && !isProcessing) {
+                    // wait to tell a shake (keeps moving) from putting the device down (settles)
+                    mJoltTimestamp = sensorEvent.timestamp;
                 }
             }
 
@@ -73,6 +96,7 @@ public class ShakeDetectorService {
 
         Objects.requireNonNull(mSensorManager).registerListener(msSensorEventListener, mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_NORMAL);
         mAccel = 10f;
+        mJoltTimestamp = 0;
         mAccelCurrent = SensorManager.GRAVITY_EARTH;
         mAccelLast = SensorManager.GRAVITY_EARTH;
     }
