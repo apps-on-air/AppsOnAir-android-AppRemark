@@ -1,7 +1,7 @@
 ## 1.2.0
 
 * Introduced `shakeSensitivity` param in `initialize` method to set how hard the device must be shaken (`VERY_LOW`, `LOW`, `MEDIUM`, `HIGH`, `VERY_HIGH`). Default is `MEDIUM`, same as previous versions.
-* Fixed remark screen opening when the device is put down on a table, sofa or chair.
+* Fixed the remark screen opening by mistake. A shake now only counts if the device keeps moving after the first jolt.
 
 ## 1.1.4
 
